@@ -12,12 +12,12 @@ add_executable(CppSample
   SampleBase.cpp
   SampleBase.h
   main.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/../AppConfig.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/../AppConfig.cpp
+  AppConfig.h
+  AppConfig.cpp
 )
 
 # Additional include directories
-target_include_directories(CppSample PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../include/)
+target_include_directories(CppSample PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/)
 
 if (UNIX AND NOT APPLE)
 set(LINUX TRUE)
@@ -45,7 +45,7 @@ else()
 endif()
 
 set(LIBRARY_PATH_RELATIVE "bin/${LIBRARY_LINK_TYPE}/${CMAKE_BUILD_TYPE}")
-set(LIBRARY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../${LIBRARY_PATH_RELATIVE}")
+set(LIBRARY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../${LIBRARY_PATH_RELATIVE}")
 message ("Library path: ${LIBRARY_PATH}")
 
 if (LINUX)

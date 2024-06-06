@@ -1,6 +1,6 @@
 #include "KeyBasedSample.h"
 #include "UserBasedSample.h"
-#include "../AppConfig.h"
+#include "AppConfig.h"
 
 #include <LicenseSpring/Exceptions.h>
 #include <LicenseSpring/FloatingClient.h>

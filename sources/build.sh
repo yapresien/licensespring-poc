@@ -10,14 +10,13 @@ echo ${machine}
 
 exit_bad_arguments()
 {
-  echo "bad arguments"
-  echo "usage: $0 {release|debug} {static|shared}"
-  exit 1
+  echo "no arguments defaulting debug static"
+#   echo "usage: $0 {release|debug} {static|shared}"
+#   exit 1
+    BUILD_TYPE_CHECK=debug
+    LINK_TYPE_CHECK=static
+
 }
-
-BUILD_TYPE_CHECK=$1
-LINK_TYPE_CHECK=$2
-
 if [ "$#" -ge 2 ]; then
     if [ ${BUILD_TYPE_CHECK,,} != "release" ] && [ ${BUILD_TYPE_CHECK,,} != "debug" ]; then
         exit_bad_arguments
