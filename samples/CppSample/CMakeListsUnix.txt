@@ -1,0 +1,95 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(CppSample)
+
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+add_executable(CppSample
+  KeyBasedSample.cpp
+  KeyBasedSample.h
+  UserBasedSample.cpp
+  UserBasedSample.h
+  SampleBase.cpp
+  SampleBase.h
+  main.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/../AppConfig.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/../AppConfig.cpp
+)
+
+# Additional include directories
+target_include_directories(CppSample PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../include/)
+
+if (UNIX AND NOT APPLE)
+set(LINUX TRUE)
+endif()
+
+if (LINUX OR MINGW)
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+        set(USE_CPP17 TRUE)
+    endif()
+    target_compile_definitions(CppSample PRIVATE _GLIBCXX_USE_CXX11_ABI=1)
+endif()
+
+if (USE_SHARED_LIBS)
+    set(LIBRARY_LINK_TYPE shared)
+    if (APPLE)
+        set(LIBRARY_EXTENSION "dylib")
+    elseif(WIN32)
+		set(LIBRARY_EXTENSION "dll")
+    elseif(LINUX)
+        set(LIBRARY_EXTENSION "so")
+    endif()
+else()
+    set(LIBRARY_LINK_TYPE static)
+    set(LIBRARY_EXTENSION "a")
+endif()
+
+set(LIBRARY_PATH_RELATIVE "bin/${LIBRARY_LINK_TYPE}/${CMAKE_BUILD_TYPE}")
+set(LIBRARY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../${LIBRARY_PATH_RELATIVE}")
+message ("Library path: ${LIBRARY_PATH}")
+
+if (LINUX)
+set_target_properties(CppSample
+                      PROPERTIES LINK_FLAGS
+                      "-L${LIBRARY_PATH} -Wl,--no-as-needed,--enable-new-dtags,-rpath,.,-rpath,$ORIGIN/../lib,-rpath,$ORIGIN/../../../${LIBRARY_PATH_RELATIVE},-rpath,$ORIGIN,-rpath,$ORIGIN/.")
+elseif(MSYS OR MINGW)
+set_target_properties(CppSample
+                      PROPERTIES LINK_FLAGS
+                      "-L${LIBRARY_PATH} -Wl,--subsystem,console,--no-as-needed,-rpath,.,-rpath,$ORIGIN/../lib,-rpath,$ORIGIN/../../../${LIBRARY_PATH_RELATIVE},-rpath,$ORIGIN,-rpath,$ORIGIN/.")
+elseif(APPLE)
+set_target_properties(CppSample
+                      PROPERTIES LINK_FLAGS
+                      "-L${LIBRARY_PATH} -framework SystemConfiguration -framework Security -framework CoreFoundation -Wl,-rpath,.,-rpath,@rpath/.,-rpath,@rpath,-rpath,@rpath/../lib,-rpath,@rpath/../../../${LIBRARY_PATH_RELATIVE}")
+endif()
+
+string(TOUPPER ${LIBRARY_LINK_TYPE} LIBRARY_LINK_TYPE)
+if(WIN32 AND USE_SHARED_LIBS)
+add_library(LicenseSpringLib MODULE IMPORTED)
+else()
+add_library(LicenseSpringLib ${LIBRARY_LINK_TYPE} IMPORTED)
+endif()
+set_target_properties(LicenseSpringLib
+    PROPERTIES IMPORTED_LOCATION
+    "${LIBRARY_PATH}/libLicenseSpring.${LIBRARY_EXTENSION}")
+
+message("${LIBRARY_PATH}/libLicenseSpring.${LIBRARY_EXTENSION}")
+
+set(LS_LINK_LIBS -lpthread)
+if(NOT MINGW)
+    list(APPEND LS_LINK_LIBS -lcurl -lssl -lcrypto)
+else()
+    list(APPEND LS_LINK_LIBS -lcurl-4 -lssl-3-x64 -lcrypto-3-x64)
+endif()
+
+if (USE_CPP17)
+    target_compile_options(CppSample PRIVATE -fPIC -std=c++17)
+	list(APPEND LS_LINK_LIBS -lstdc++fs)
+else()
+    target_compile_options(CppSample PRIVATE -fPIC -std=c++14)
+endif()
+target_link_libraries(CppSample PUBLIC LicenseSpringLib ${LS_LINK_LIBS})
+
+set_target_properties(CppSample PROPERTIES
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
