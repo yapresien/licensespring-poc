@@ -15,9 +15,18 @@
 using namespace LicenseSpring;
 
 int TestFloatingServer( LicenseSpring::Configuration::ptr_t config );
-
-int main()
+using namespace std;
+int main(int argc, char** argv)
 {
+
+    bool deactivateAndRemove = false; // deactivate and remove the license after sample execution
+    if(argc == 2 ){
+        string v1=argv[1];
+        int da = stol(v1);
+        if( da == 1 || da == 0 )
+            deactivateAndRemove = da == 1 ? true:false;
+    }
+
 #ifdef _WIN32
     // Enable displaying Unicode symbols in console (custom fields and metadata are UTF-8 encoded)
     SetConsoleOutputCP( CP_UTF8 );
@@ -28,14 +37,14 @@ int main()
     {
         AppConfig appConfig( "C++ Sample", "3.1" );
 
-        auto pConfiguration = appConfig.createLicenseSpringConfig();
+        auto pConfiguration = appConfig.createLicenseSpringConfig( );
 
-        std::cout << "------------- General info -------------" << std::endl;
-        std::cout << pConfiguration->getAppName() + ' ' << pConfiguration->getAppVersion() << std::endl;
-        std::cout << "LicenseSpring SDK version: " << pConfiguration->getSdkVersion() << std::endl;
-        std::cout << "LicenseSpring API version: " << pConfiguration->getLicenseSpringAPIVersion() << std::endl;
-        std::cout << "Determined OS version:     " << pConfiguration->getOsVersion() << std::endl;
-        std::cout << std::endl;
+        // std::cout << "------------- General info -------------" << std::endl;
+        // std::cout << pConfiguration->getAppName() + ' ' << pConfiguration->getAppVersion() << std::endl;
+        // std::cout << "LicenseSpring SDK version: " << pConfiguration->getSdkVersion() << std::endl;
+        // std::cout << "LicenseSpring API version: " << pConfiguration->getLicenseSpringAPIVersion() << std::endl;
+        // std::cout << "Determined OS version:     " << pConfiguration->getOsVersion() << std::endl;
+        // std::cout << std::endl;
 
         std::cout << "------------- Network info -------------" << std::endl;
         std::cout << "Host name:   " << pConfiguration->getNetworkInfo().hostName() << std::endl;
@@ -43,9 +52,6 @@ int main()
         std::cout << "MAC address: " << pConfiguration->getNetworkInfo().mac() << std::endl;
         std::cout << std::endl;
 
-        //return TestFloatingServer( pConfiguration ); // Uncomment this line to test Floating server
-
-        bool deactivateAndRemove = false; // deactivate and remove the license after sample execution
 
         auto licenseManager = LicenseManager::create( pConfiguration );
 
@@ -58,18 +64,18 @@ int main()
         std::cout << "Trial allowed:            " << productInfo.isTrialAllowed() << std::endl;
         std::cout << "Metadata:                 " << productInfo.metadata() << std::endl;
 
-        auto timeout = productInfo.floatingLicenseTimeout();
-        if( timeout > 0 )
-            std::cout << "Floating license timeout: " << timeout << " min" << std::endl;
+        // auto timeout = productInfo.floatingLicenseTimeout();
+        // if( timeout > 0 )
+        //     std::cout << "Floating license timeout: " << timeout << " min" << std::endl;
 
-        if( productInfo.isTrialAllowed() && productInfo.trialPeriod() > 0 )
-        {
-            std::string periodStr = "Trial period:             " +
-                std::to_string( productInfo.trialPeriod() ) + " day";
-            if( productInfo.trialPeriod() > 1 )
-                periodStr += "s";
-            std::cout << periodStr << std::endl;
-        }
+        // if( productInfo.isTrialAllowed() && productInfo.trialPeriod() > 0 )
+        // {
+        //     std::string periodStr = "Trial period:             " +
+        //         std::to_string( productInfo.trialPeriod() ) + " day";
+        //     if( productInfo.trialPeriod() > 1 )
+        //         periodStr += "s";
+        //     std::cout << periodStr << std::endl;
+        // }
 
         std::shared_ptr<SampleBase> sample = nullptr;
         std::string authMethod = "Authorization method:     ";
@@ -136,77 +142,3 @@ int main()
     }
 }
 
-int TestFloatingServer( LicenseSpring::Configuration::ptr_t config )
-{
-    // Optionaly you can provide generic user info to config, it will be passed to the FloatingServer
-    config->setUserInfo( "Test user info" );
-
-    auto fc = FloatingClient::create( config );
-
-    std::cout << "Checking connection to Floating server...\n";
-    if( fc->isOnline( true ) )
-        std::cout << "Connection established\n\n";
-
-    auto serverInfo = fc->getServerInfo();
-    const auto& serverAddresses = serverInfo->servers();
-    if( !serverAddresses.empty() || serverInfo->registrationExpiry() != 0 )
-    {
-        std::cout << "------------- Server info -------------\n";
-        std::cout << "Client registration expires in " << serverInfo->registrationExpiry() << " minutes\n";
-        std::cout << "Servers:\n";
-        for( const auto& serverIP : serverAddresses )
-            std::cout << serverIP;
-        std::cout << "\n\n";
-    }
-
-    std::cout << "Registering floating license...\n";
-    std::string clientId; // can be anything, e.g. identifier of this user, machine id or app instance id
-    auto license = fc->getCurrentLicense();
-    if( license == nullptr )
-    {
-        clientId = config->getHostName(); // for example let it be host name
-        license = fc->registerLicense( clientId );
-    }
-    else
-    {
-        clientId = license->floatingClientId();
-        license->registerFloatingLicense();
-    }
-    std::cout << "Floating license successfully registered to client " << clientId << "\n";
-
-    // Increase license consumption
-    if( license->type() == LicenseTypeConsumption )
-    {
-        std::cout << "Increasing and updating consumption...\n";
-        license->updateConsumption( 1 );
-        license->syncConsumption();
-        std::cout << "Operation completed successfully\n\n";
-    }
-
-    // Increase consumption features
-    for( const auto& feature : license->features() )
-    {
-        if( feature.featureType() == FeatureTypeConsumption )
-            license->updateFeatureConsumption( feature.code(), 1 );
-    }
-    license->syncFeatureConsumption();
-
-    // In order to keep floating license alive automatically in the background thread uncomment the line below
-    //SampleBase::setupAutomaticLicenseUpdates( license );
-
-    // Test license borrowing
-    //license->borrow(); // or fc->borrowLicense( clientId );
-
-    SampleBase::PrintLicense( license );
-
-    std::cout << "\nUnregistering client...\n";
-    // Floating license will be automatically revoked (released) when destroyed,
-    // our you can do it manually by the following code
-    license->setAutoRelease( false );
-    license->releaseFloatingLicense( true );
-    // or call
-    //fc->unregisterLicense( clientId );
-    std::cout << "The client " << clientId << " unregistered successfully\n\n";
-
-    return 0;
-}
