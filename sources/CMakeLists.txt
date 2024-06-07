@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(CppSample)
+project(presien-lic-app)
 
 if(WIN32 AND (NOT MINGW) AND (NOT MSYS))
     include(CMakeListsWindows.txt)

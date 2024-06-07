@@ -4,7 +4,7 @@ project(presien-lic-app)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-add_executable(CppSample
+add_executable(${PROJECT_NAME}
   KeyBasedSample.cpp
   KeyBasedSample.h
   UserBasedSample.cpp
@@ -17,7 +17,7 @@ add_executable(CppSample
 )
 
 # Additional include directories
-target_include_directories(CppSample PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include/)
 
 if (UNIX AND NOT APPLE)
 set(LINUX TRUE)
@@ -27,7 +27,7 @@ if (LINUX OR MINGW)
     if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
         set(USE_CPP17 TRUE)
     endif()
-    target_compile_definitions(CppSample PRIVATE _GLIBCXX_USE_CXX11_ABI=1)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE _GLIBCXX_USE_CXX11_ABI=1)
 endif()
 
 if (USE_SHARED_LIBS)
@@ -49,15 +49,15 @@ set(LIBRARY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../${LIBRARY_PATH_RELATIVE}")
 message ("Library path: ${LIBRARY_PATH}")
 
 if (LINUX)
-set_target_properties(CppSample
+set_target_properties(${PROJECT_NAME}
                       PROPERTIES LINK_FLAGS
                       "-L${LIBRARY_PATH} -Wl,--no-as-needed,--enable-new-dtags,-rpath,.,-rpath,$ORIGIN/../lib,-rpath,$ORIGIN/../../../${LIBRARY_PATH_RELATIVE},-rpath,$ORIGIN,-rpath,$ORIGIN/.")
 elseif(MSYS OR MINGW)
-set_target_properties(CppSample
+set_target_properties(${PROJECT_NAME}
                       PROPERTIES LINK_FLAGS
                       "-L${LIBRARY_PATH} -Wl,--subsystem,console,--no-as-needed,-rpath,.,-rpath,$ORIGIN/../lib,-rpath,$ORIGIN/../../../${LIBRARY_PATH_RELATIVE},-rpath,$ORIGIN,-rpath,$ORIGIN/.")
 elseif(APPLE)
-set_target_properties(CppSample
+set_target_properties(${PROJECT_NAME}
                       PROPERTIES LINK_FLAGS
                       "-L${LIBRARY_PATH} -framework SystemConfiguration -framework Security -framework CoreFoundation -Wl,-rpath,.,-rpath,@rpath/.,-rpath,@rpath,-rpath,@rpath/../lib,-rpath,@rpath/../../../${LIBRARY_PATH_RELATIVE}")
 endif()
@@ -82,14 +82,14 @@ else()
 endif()
 
 if (USE_CPP17)
-    target_compile_options(CppSample PRIVATE -fPIC -std=c++17)
+    target_compile_options(${PROJECT_NAME} PRIVATE -fPIC -std=c++17)
 	list(APPEND LS_LINK_LIBS -lstdc++fs)
 else()
-    target_compile_options(CppSample PRIVATE -fPIC -std=c++14)
+    target_compile_options(${PROJECT_NAME} PRIVATE -fPIC -std=c++14)
 endif()
-target_link_libraries(CppSample PUBLIC LicenseSpringLib ${LS_LINK_LIBS})
+target_link_libraries(${PROJECT_NAME} PUBLIC LicenseSpringLib ${LS_LINK_LIBS})
 
-set_target_properties(CppSample PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
