@@ -39,12 +39,12 @@ int main(int argc, char** argv)
 
         auto pConfiguration = appConfig.createLicenseSpringConfig( );
 
-        // std::cout << "------------- General info -------------" << std::endl;
-        // std::cout << pConfiguration->getAppName() + ' ' << pConfiguration->getAppVersion() << std::endl;
-        // std::cout << "LicenseSpring SDK version: " << pConfiguration->getSdkVersion() << std::endl;
-        // std::cout << "LicenseSpring API version: " << pConfiguration->getLicenseSpringAPIVersion() << std::endl;
-        // std::cout << "Determined OS version:     " << pConfiguration->getOsVersion() << std::endl;
-        // std::cout << std::endl;
+        std::cout << "------------- General info -------------" << std::endl;
+        std::cout << pConfiguration->getAppName() + ' ' << pConfiguration->getAppVersion() << std::endl;
+        std::cout << "LicenseSpring SDK version: " << pConfiguration->getSdkVersion() << std::endl;
+        std::cout << "LicenseSpring API version: " << pConfiguration->getLicenseSpringAPIVersion() << std::endl;
+        std::cout << "Determined OS version:     " << pConfiguration->getOsVersion() << std::endl;
+        std::cout << std::endl;
 
         std::cout << "------------- Network info -------------" << std::endl;
         std::cout << "Host name:   " << pConfiguration->getNetworkInfo().hostName() << std::endl;
