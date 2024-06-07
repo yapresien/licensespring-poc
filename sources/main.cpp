@@ -118,11 +118,10 @@ int main(int argc, char** argv)
         }
 
         // Run appropriate sample
-        // if( licenseManager->isOnline() )
-        //     sample->runOnline( deactivateAndRemove );
-        // else
-        
-        sample->runOffline( deactivateAndRemove );
+        if( licenseManager->isOnline() )
+            sample->runOnline( deactivateAndRemove );
+        else
+            sample->runOffline( deactivateAndRemove );
 
         return 0;
     }
