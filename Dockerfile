@@ -24,3 +24,4 @@ RUN git pull
 RUN chmod +x build.sh
 RUN bash ./build.sh
 RUN ./debug_static/presien-lic-app
+ 
