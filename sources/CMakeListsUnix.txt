@@ -44,7 +44,14 @@ else()
     set(LIBRARY_EXTENSION "a")
 endif()
 
-set(LIBRARY_PATH_RELATIVE "bin/${LIBRARY_LINK_TYPE}/${CMAKE_BUILD_TYPE}")
+EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
+if( (${ARCHITECTURE} STREQUAL "x86_64") OR (${ARCHITECTURE} STREQUAL "aarch64"))
+    message( STATUS "Supported Architecture: ${ARCHITECTURE}" )
+else()
+    message(FATAL_ERROR "Current Architecture not supported Exiting...")
+endif()
+
+set(LIBRARY_PATH_RELATIVE "bin/${ARCHITECTURE}/${LIBRARY_LINK_TYPE}/${CMAKE_BUILD_TYPE}")
 set(LIBRARY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../${LIBRARY_PATH_RELATIVE}")
 message ("Library path: ${LIBRARY_PATH}")
 

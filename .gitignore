@@ -1,3 +1,4 @@
+sources/release_static
 sources/debug_static/cmake_install.cmake
 sources/debug_static/CMakeCache.txt
 sources/debug_static/CppSample

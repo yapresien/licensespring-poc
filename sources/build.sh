@@ -13,7 +13,7 @@ exit_bad_arguments()
   echo "no arguments defaulting debug static"
 #   echo "usage: $0 {release|debug} {static|shared}"
 #   exit 1
-    BUILD_TYPE_CHECK=debug
+    BUILD_TYPE_CHECK=release
     LINK_TYPE_CHECK=static
 
 }
