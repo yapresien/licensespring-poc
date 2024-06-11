@@ -23,5 +23,9 @@ RUN git pull
 
 RUN chmod +x build.sh
 RUN bash ./build.sh
-RUN ./debug_static/presien-lic-app
+#deactivate
+RUN ./debug_static/presien-lic-app 1 
+
+#deactivate
+RUN ./debug_static/presien-lic-app 0
  
