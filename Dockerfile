@@ -16,7 +16,8 @@ RUN apt-get update \
 RUN sed -i 's/^\($ModLoad imklog\)/#\1/' /etc/rsyslog.conf
 
 
-RUN git clone https://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@github.com/yapresien/licensespring-poc.git
+RUN git clone --depth 1 https://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@github.com/yapresien/licensespring-poc.git
+
 
 WORKDIR /licensespring-poc/sources/
 RUN git reset --hard
@@ -24,9 +25,8 @@ RUN git pull
 
 RUN chmod +x build.sh
 RUN bash ./build.sh
-#deactivate
-RUN ./release_static/presien-lic-app 1 
 
 #deactivate
-RUN ./release_static/presien-lic-app 0
- 
+WORKDIR /licensespring-poc/sources/release_static
+RUN ./presien-lic-app
+

@@ -26,9 +26,6 @@ set(LINUX TRUE)
 endif()
 
 if (LINUX OR MINGW)
-    if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
-        message(FATAL_ERROR "Require at least gcc-9")
-    endif()
     if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
         set(USE_CPP17 TRUE)
     endif()
@@ -58,7 +55,6 @@ endif()
 
 set(LIBRARY_PATH_RELATIVE "bin/${ARCHITECTURE}/${LIBRARY_LINK_TYPE}/${CMAKE_BUILD_TYPE}")
 set(LIBRARY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../${LIBRARY_PATH_RELATIVE}")
-message ("Library path: ${LIBRARY_PATH}")
 
 if (LINUX)
 set_target_properties(${PROJECT_NAME}
@@ -84,7 +80,6 @@ set_target_properties(LicenseSpringLib
     PROPERTIES IMPORTED_LOCATION
     "${LIBRARY_PATH}/libLicenseSpring.${LIBRARY_EXTENSION}")
 
-message("${LIBRARY_PATH}/libLicenseSpring.${LIBRARY_EXTENSION}")
 
 set(LS_LINK_LIBS -lpthread)
 if(NOT MINGW)
