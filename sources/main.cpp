@@ -44,6 +44,7 @@ int main(int argc, char** argv)
         std::cout << "LicenseSpring SDK version: " << pConfiguration->getSdkVersion() << std::endl;
         std::cout << "LicenseSpring API version: " << pConfiguration->getLicenseSpringAPIVersion() << std::endl;
         std::cout << "Determined OS version:     " << pConfiguration->getOsVersion() << std::endl;
+        std::cout << "Hardware ID: " << pConfiguration->getHardwareID() << std::endl;
         std::cout << std::endl;
 
         std::cout << "------------- Network info -------------" << std::endl;
