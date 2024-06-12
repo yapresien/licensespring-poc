@@ -21,6 +21,7 @@ RUN git clone --depth 1 https://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@github.
 
 WORKDIR /licensespring-poc/sources/
 RUN git reset --hard
+ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
 RUN git pull
 
 RUN chmod +x build.sh
