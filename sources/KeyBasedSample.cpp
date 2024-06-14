@@ -18,6 +18,8 @@ void KeyBasedSample::runOnline( bool deactivateAndRemove )
         }
 
         license = m_licenseManager->activateLicense( licenseId );
+        license->addDeviceVariable("DV0", "value0", false);
+        license->addDeviceVariable("DV1", "value1", false);
         std::cout << "License activated successfully" << std::endl;
     }
     else
