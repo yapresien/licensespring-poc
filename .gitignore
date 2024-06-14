@@ -1,3 +1,6 @@
+build/
+sources/build
+sources/winbuild
 sources/release_static
 sources/debug_static/cmake_install.cmake
 sources/debug_static/CMakeCache.txt
@@ -59,3 +62,4 @@ sources/debug_static/CMakeFiles/presien-lic-app.dir/SampleBase.cpp.o
 sources/debug_static/CMakeFiles/presien-lic-app.dir/SampleBase.cpp.o.d
 sources/debug_static/CMakeFiles/presien-lic-app.dir/UserBasedSample.cpp.o
 sources/debug_static/CMakeFiles/presien-lic-app.dir/UserBasedSample.cpp.o.d
+build/.cmake/api/v1/query/client-vscode/query.json
