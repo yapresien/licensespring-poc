@@ -210,7 +210,7 @@ bool PurgeLicense(const LicenseManager::ptr_t& licenseManager){
 
 int main(int argc, char** argv)
 {
-    cout << getCpuId() << std::endl; 
+    //cout << getCpuId() << std::endl; 
     cout << machineid::machineHash() << std::endl; 
 
     return 0;
