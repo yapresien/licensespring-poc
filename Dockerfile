@@ -33,5 +33,5 @@ WORKDIR /licensespring-poc/sources/release_static
 
 # below command will force to RUN everytime 
 ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
-RUN ./presien-lic-app
+#RUN ./presien-lic-app
 
