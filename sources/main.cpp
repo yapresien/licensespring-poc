@@ -192,9 +192,12 @@ int main(int argc, char** argv)
             string MAC0 = GetEnv("MAC1");
             std::transform(MAC0.begin(), MAC0.end(), MAC0.begin(),
                 [](unsigned char c){ return std::toupper(c); });
-            std::remove( MAC0.begin(), MAC0.end(), ':');
-
-            std::cout << "MAC ID: " << MAC0 << std::endl;
+            string MAC1;
+            for(auto& v: MAC0){
+                if(v !=':')
+                    MAC1+= v;
+            }
+            std::cout << "MAC ID: " << MAC1 << std::endl;
 
             string TARGETHOSTNAME = GetEnv("TARGETHOSTNAME");
             std::transform(TARGETHOSTNAME.begin(), TARGETHOSTNAME.end(), TARGETHOSTNAME.begin(),
@@ -209,7 +212,7 @@ int main(int argc, char** argv)
             std::cout << "CUSTOMER_SSN: " << CUSTOMER_SSN << std::endl;
 
             SHA1 checksum;
-            auto sfinal = MAC0+TARGETHOSTNAME+CUSTOMER_SSN;
+            auto sfinal = MAC1+TARGETHOSTNAME+CUSTOMER_SSN;
             std::cout << "sfinal: " << sfinal << std::endl;
 
             checksum.update(sfinal.c_str());
