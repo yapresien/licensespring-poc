@@ -17,6 +17,6 @@ LicenseSpring::Configuration::ptr_t AppConfig::createLicenseSpringConfig() const
     return LicenseSpring::Configuration::Create(
         EncryptStr( "da262440-9ad3-47f4-b5d5-3612c0f08622" ), // your LicenseSpring API key (UUID)
         EncryptStr( "1h1ORaBjA6JZJbB3gJenU3-dz5nkcwS4v_tm6hGmWZU" ), // your LicenseSpring Shared key
-        EncryptStr( "BS100" ), // product code that you specified in LicenseSpring for your application
+        EncryptStr( "BS110" ), // product code that you specified in LicenseSpring for your application
         appName, appVersion, options );
 }
