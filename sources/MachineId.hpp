@@ -218,19 +218,31 @@ const char *getMachineName() {
 
 #else // !DARWIN
 
-	static void getCpuid(unsigned int *eax, unsigned int *ebx, unsigned int *ecx, unsigned int *edx) {
+	static void getCpuid(unsigned int *a, unsigned int *b, unsigned int *c, unsigned int *d) {
 #ifdef __arm__
-		*eax = 0xFD;
-		*ebx = 0xC1;
-		*ecx = 0x72;
-		*edx = 0x1D;
+		*a = 0xFD;
+		*b = 0xC1;
+		*c = 0x72;
+		*d = 0x1D;
 		return;
 #else
-		asm volatile("cpuid" :
-			"=a" (*eax),
-			"=b" (*ebx),
-			"=c" (*ecx),
-			"=d" (*edx) : "0" (*eax), "2" (*ecx));
+		//asm volatile("cpuid" :
+		//	"=a" (*eax),
+		//	"=b" (*ebx),
+		//	"=c" (*ecx),
+		//	"=d" (*edx) : "0" (*eax), "2" (*ecx));
+
+    *a = (unsigned int )0x1;
+    asm (
+      "mov eax, %0\n\t"
+      "cpuid\n\t"
+      "mov %0, eax\n\t"
+      "mov %1, ebx\n\t"
+      "mov %2, ecx\n\t"
+      "mov %3, edx\n\t"
+      : "=r" (a), "=r" (b), "=r" (c), "=r" (d)
+      : "0" (a), "2" (*c)
+    );
 #endif
 	}
 
