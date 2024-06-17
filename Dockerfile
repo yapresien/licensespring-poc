@@ -8,6 +8,7 @@ RUN apt-get update \
        build-essential \
        cmake \
        git \
+       libcpuinfo-dev \
        software-properties-common \
        rsyslog systemd systemd-cron sudo \
     && apt-get clean \

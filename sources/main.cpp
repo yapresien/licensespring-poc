@@ -18,9 +18,9 @@ using namespace LicenseSpring;
 #include <cctype>
 #include <string>
 
+#include "cpu-info.h"
+
 using namespace std;
-
-
 enum class ACTION_CENTRE{
     INVALID_ACTION,
     VALIDATE = 0,
@@ -65,7 +65,8 @@ void PraseCmdParamsIfInstall( int argc, char**argv ){
 }
 
 
-bool InstallLicenseOnline( const LicenseManager::ptr_t& licenseManager, bool deactivateAndRemove){
+bool InstallLicenseOnline( const LicenseManager::ptr_t& licenseManager, 
+                            bool deactivateAndRemove){
 
     std::cout << "\nActivating Install mode -----------";
     std::cout << "\nActivating ------------------------";
@@ -95,7 +96,7 @@ bool InstallLicenseOnline( const LicenseManager::ptr_t& licenseManager, bool dea
 }
 
 bool ValidateLicenseOffline( const LicenseManager::ptr_t& licenseManager, 
-                              bool deactivateAndRemove=false){
+                            bool deactivateAndRemove=false){
     std::cout << "\n Validating offline mode -----------";
     std::cout << "\nActivating -------------------------";
     std::cout << "\nActivated  -------------------------\n";
@@ -115,8 +116,97 @@ bool ValidateLicenseOffline( const LicenseManager::ptr_t& licenseManager,
     return true;
 }
 
+bool UpdateLicense(const LicenseManager::ptr_t& licenseManager){
+    std::cout << "\n UpdateLicense -- to be implemented.";
+    return false;
+}
+
+bool DeactivateLicense(const LicenseManager::ptr_t& licenseManager){
+    std::cout << "\n DeactivateLicense -- to be implemented.";
+    return false;
+}
+
+bool PurgeLicense(const LicenseManager::ptr_t& licenseManager){
+    std::cout << "\n PurgeLicense -- to be implemented.";
+    return false;
+}
+
+
+
+int getCpuId(){
+	if (!cpuinfo_initialize()) {
+		fprintf(stderr, "failed to initialize CPU information\n");
+		exit(EXIT_FAILURE);
+	}
+#ifdef __ANDROID__
+	printf("SoC name: %s\n", cpuinfo_get_package(0)->name);
+#else
+	printf("Packages:\n");
+	for (uint32_t i = 0; i < cpuinfo_get_packages_count(); i++) {
+		printf("\t%" PRIu32 ": %s\n", i, cpuinfo_get_package(i)->name);
+	}
+#endif
+	printf("Microarchitectures:\n");
+	for (uint32_t i = 0; i < cpuinfo_get_uarchs_count(); i++) {
+		const struct cpuinfo_uarch_info* uarch_info = cpuinfo_get_uarch(i);
+		const char* uarch_string = uarch_to_string(uarch_info->uarch);
+		if (uarch_string == NULL) {
+			printf("\t%" PRIu32 "x Unknown (0x%08" PRIx32 "\n",
+			       uarch_info->core_count,
+			       (uint32_t)uarch_info->uarch);
+		} else {
+			printf("\t%" PRIu32 "x %s\n", uarch_info->core_count, uarch_string);
+		}
+	}
+	printf("Cores:\n");
+	for (uint32_t i = 0; i < cpuinfo_get_cores_count(); i++) {
+		const struct cpuinfo_core* core = cpuinfo_get_core(i);
+		if (core->processor_count == 1) {
+			printf("\t%" PRIu32 ": 1 processor (%" PRIu32 ")", i, core->processor_start);
+		} else {
+			printf("\t%" PRIu32 ": %" PRIu32 " processors (%" PRIu32 "-%" PRIu32 ")",
+			       i,
+			       core->processor_count,
+			       core->processor_start,
+			       core->processor_start + core->processor_count - 1);
+		}
+		const char* vendor_string = vendor_to_string(core->vendor);
+		const char* uarch_string = uarch_to_string(core->uarch);
+		if (vendor_string == NULL) {
+			printf(", vendor 0x%08" PRIx32 " uarch 0x%08" PRIx32 "\n",
+			       (uint32_t)core->vendor,
+			       (uint32_t)core->uarch);
+		} else if (uarch_string == NULL) {
+			printf(", %s uarch 0x%08" PRIx32 "\n", vendor_string, (uint32_t)core->uarch);
+		} else {
+			printf(", %s %s\n", vendor_string, uarch_string);
+		}
+	}
+	printf("Logical processors");
+#if defined(__linux__)
+	printf(" (System ID)");
+#endif
+	printf(":\n");
+	for (uint32_t i = 0; i < cpuinfo_get_processors_count(); i++) {
+		const struct cpuinfo_processor* processor = cpuinfo_get_processor(i);
+		printf("\t%" PRIu32 "", i);
+
+#if defined(__linux__)
+		printf(" (%" PRId32 ")", processor->linux_id);
+#endif
+
+#if CPUINFO_ARCH_X86 || CPUINFO_ARCH_X86_64
+		printf(": APIC ID 0x%08" PRIx32 "\n", processor->apic_id);
+#else
+		printf("\n");
+#endif
+	}
+}
+
 int main(int argc, char** argv)
 {
+    cout << getCpuId() << std::endl; 
+    return 0;
 #ifdef _WIN32
     // Enable displaying Unicode symbols in console (custom fields and metadata are UTF-8 encoded)
     SetConsoleOutputCP( CP_UTF8 );
@@ -138,6 +228,7 @@ int main(int argc, char** argv)
         std::cout << "Determined OS version:     " << pConfiguration->getOsVersion() << std::endl;
         std::cout << "Hardware ID: " << pConfiguration->getHardwareID() << std::endl;
         std::cout << std::endl;
+        pConfiguration->setHardwareID("HEXAGONSN1102323");
 
         std::cout << "------------- Network info -------------" << std::endl;
         std::cout << "Host name:   " << pConfiguration->getNetworkInfo().hostName() << std::endl;
@@ -177,11 +268,20 @@ int main(int argc, char** argv)
         }
 
         switch(gAction){
+            case ACTION_CENTRE::VALIDATE:
+                ValidateLicenseOffline(lmgr, deactivateAndRemove);
+                break;
             case ACTION_CENTRE::INSTALL:
                 InstallLicenseOnline(lmgr, deactivateAndRemove);
                 break;
-            case ACTION_CENTRE::VALIDATE:
-                ValidateLicenseOffline(lmgr, deactivateAndRemove);
+            case ACTION_CENTRE::UPDATE:
+                UpdateLicense(lmgr);
+                break;
+            case ACTION_CENTRE::DEACTIVATE:
+                DeactivateLicense(lmgr);
+                break;
+            case ACTION_CENTRE::PURGE:
+                PurgeLicense(lmgr);
                 break;
             default:
                 std::cerr << "\n Default action not supported.";

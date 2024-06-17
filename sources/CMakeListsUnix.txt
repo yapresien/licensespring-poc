@@ -5,6 +5,9 @@ project(presien-lic-app)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 
+find_package(PkgConfig)
+pkg_check_modules(CpuInfo REQUIRED IMPORTED_TARGET libcpuinfo)
+
 
 add_executable(${PROJECT_NAME}
   KeyBasedSample.cpp
@@ -94,7 +97,8 @@ if (USE_CPP17)
 else()
     target_compile_options(${PROJECT_NAME} PRIVATE -fPIC -std=c++14)
 endif()
-target_link_libraries(${PROJECT_NAME} PUBLIC LicenseSpringLib ${LS_LINK_LIBS})
+target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::CpuInfo LicenseSpringLib ${LS_LINK_LIBS} )
+
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED YES

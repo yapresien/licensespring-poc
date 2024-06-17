@@ -10,7 +10,7 @@ void KeyBasedSample::runOnline( bool deactivateAndRemove )
     auto license = m_licenseManager->getCurrentLicense();
     if(license){
         std::cout <<"\nError - License is already installed.";
-        return;
+        //return;
     }
 
     auto licenseId = LicenseID::fromKey("HAGJ-ET4H-8CJJ-RKBS" );
