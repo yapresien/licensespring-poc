@@ -19,6 +19,8 @@ using namespace LicenseSpring;
 #include <string>
 
 #include "cpu-info.h"
+#include "MachineId.hpp"
+
 
 using namespace std;
 enum class ACTION_CENTRE{
@@ -201,11 +203,15 @@ int getCpuId(){
 		printf("\n");
 #endif
 	}
+
+    return cpuinfo_get_processors_count();
 }
 
 int main(int argc, char** argv)
 {
     cout << getCpuId() << std::endl; 
+    cout << machineid::machineHash() << std::endl; 
+
     return 0;
 #ifdef _WIN32
     // Enable displaying Unicode symbols in console (custom fields and metadata are UTF-8 encoded)
