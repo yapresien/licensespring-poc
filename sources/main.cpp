@@ -21,6 +21,7 @@ using namespace LicenseSpring;
 //#include "cpu-info.h"
 
 #include "MachineId.hpp"
+#include "Sha1.hpp"
 
 
 using namespace std;
@@ -135,85 +136,21 @@ bool PurgeLicense(const LicenseManager::ptr_t& licenseManager){
 }
 
 
-
-// int getCpuId(){
-// 	if (!cpuinfo_initialize()) {
-// 		fprintf(stderr, "failed to initialize CPU information\n");
-// 		exit(EXIT_FAILURE);
-// 	}
-// #ifdef __ANDROID__
-// 	printf("SoC name: %s\n", cpuinfo_get_package(0)->name);
-// #else
-// 	printf("Packages:\n");
-// 	for (uint32_t i = 0; i < cpuinfo_get_packages_count(); i++) {
-// 		printf("\t%" PRIu32 ": %s\n", i, cpuinfo_get_package(i)->name);
-// 	}
-// #endif
-// 	printf("Microarchitectures:\n");
-// 	for (uint32_t i = 0; i < cpuinfo_get_uarchs_count(); i++) {
-// 		const struct cpuinfo_uarch_info* uarch_info = cpuinfo_get_uarch(i);
-// 		const char* uarch_string = uarch_to_string(uarch_info->uarch);
-// 		if (uarch_string == NULL) {
-// 			printf("\t%" PRIu32 "x Unknown (0x%08" PRIx32 "\n",
-// 			       uarch_info->core_count,
-// 			       (uint32_t)uarch_info->uarch);
-// 		} else {
-// 			printf("\t%" PRIu32 "x %s\n", uarch_info->core_count, uarch_string);
-// 		}
-// 	}
-// 	printf("Cores:\n");
-// 	for (uint32_t i = 0; i < cpuinfo_get_cores_count(); i++) {
-// 		const struct cpuinfo_core* core = cpuinfo_get_core(i);
-// 		if (core->processor_count == 1) {
-// 			printf("\t%" PRIu32 ": 1 processor (%" PRIu32 ")", i, core->processor_start);
-// 		} else {
-// 			printf("\t%" PRIu32 ": %" PRIu32 " processors (%" PRIu32 "-%" PRIu32 ")",
-// 			       i,
-// 			       core->processor_count,
-// 			       core->processor_start,
-// 			       core->processor_start + core->processor_count - 1);
-// 		}
-// 		const char* vendor_string = vendor_to_string(core->vendor);
-// 		const char* uarch_string = uarch_to_string(core->uarch);
-// 		if (vendor_string == NULL) {
-// 			printf(", vendor 0x%08" PRIx32 " uarch 0x%08" PRIx32 "\n",
-// 			       (uint32_t)core->vendor,
-// 			       (uint32_t)core->uarch);
-// 		} else if (uarch_string == NULL) {
-// 			printf(", %s uarch 0x%08" PRIx32 "\n", vendor_string, (uint32_t)core->uarch);
-// 		} else {
-// 			printf(", %s %s\n", vendor_string, uarch_string);
-// 		}
-// 	}
-// 	printf("Logical processors");
-// #if defined(__linux__)
-// 	printf(" (System ID)");
-// #endif
-// 	printf(":\n");
-// 	for (uint32_t i = 0; i < cpuinfo_get_processors_count(); i++) {
-// 		const struct cpuinfo_processor* processor = cpuinfo_get_processor(i);
-// 		printf("\t%" PRIu32 "", i);
-
-// #if defined(__linux__)
-// 		printf(" (%" PRId32 ")", processor->linux_id);
-// #endif
-
-// #if CPUINFO_ARCH_X86 || CPUINFO_ARCH_X86_64
-// 		printf(": APIC ID 0x%08" PRIx32 "\n", processor->apic_id);
-// #else
-// 		printf("\n");
-// #endif
-// 	}
-
-//     return cpuinfo_get_processors_count();
-// }
+std::string GetEnv( const std::string & var ) {
+     const char * val = std::getenv( var.c_str() );
+     if ( val == nullptr ) { // invalid to assign nullptr to std::string
+         return "";
+     }
+     else {
+         return val;
+     }
+}
 
 int main(int argc, char** argv)
 {
     //cout << getCpuId() << std::endl; 
-    cout << machineid::machineHash() << std::endl; 
-
-    return 0;
+    //cout << machineid::machineHash() << std::endl; 
+    
 #ifdef _WIN32
     // Enable displaying Unicode symbols in console (custom fields and metadata are UTF-8 encoded)
     SetConsoleOutputCP( CP_UTF8 );
@@ -235,7 +172,62 @@ int main(int argc, char** argv)
         std::cout << "Determined OS version:     " << pConfiguration->getOsVersion() << std::endl;
         std::cout << "Hardware ID: " << pConfiguration->getHardwareID() << std::endl;
         std::cout << std::endl;
-        pConfiguration->setHardwareID("HEXAGONSN1102323");
+
+        int hwid_opt = 2;
+        if(hwid_opt == 1){
+            //license spring sdk generated hwid
+            std::cout << "Hardware ID: " << pConfiguration->getHardwareID() << std::endl;
+        }
+        else if(hwid_opt==2){
+            //shared as environment variable to docker run e.g.
+            //sudo docker run -e MAC1=`cat /sys/class/net/eth0/address` -e TARGETHOSTNAME=$HOSTNAME -e CUSTOMER_SSN="HEXAGONSSN1234" --entrypoint /bin/sh -it lsdemo:2.0
+            //OR
+            //sudo docker run -e MAC1=`ip link show eth0 | grep link/ether | awk '{print $2}'` -e TARGETHOSTNAME=$HOSTNAME -e CUSTOMER_SSN="HEXAGONSSN1234" --entrypoint /bin/sh -it lsdemo:2.0
+            //MAC1 - 48B02D55DE70
+            //TARGETHOSTNAME - CHEWY-CARAMEL
+            //CUSTOMER-SSN - HEXAGONSSN1234
+            
+            //string - 48B02D55DE70CHEWY-CARAMELHEXAGONSSN1234
+            //SHA1 - 2c2af7f48fc97ed259829851769b60b16f7f5341
+            string MAC0 = GetEnv("MAC1");
+            std::transform(MAC0.begin(), MAC0.end(), MAC0.begin(),
+                [](unsigned char c){ return std::toupper(c); });
+            std::remove( MAC0.begin(), MAC0.end(), ':');
+
+            std::cout << "MAC ID: " << MAC0 << std::endl;
+
+            string TARGETHOSTNAME = GetEnv("TARGETHOSTNAME");
+            std::transform(TARGETHOSTNAME.begin(), TARGETHOSTNAME.end(), TARGETHOSTNAME.begin(),
+                [](unsigned char c){ return std::toupper(c); });
+
+            std::cout << "TARGETHOSTNAME: " << TARGETHOSTNAME << std::endl;
+
+            string CUSTOMER_SSN = GetEnv("CUSTOMER_SSN");
+            std::transform(CUSTOMER_SSN.begin(), CUSTOMER_SSN.end(), CUSTOMER_SSN.begin(),
+                [](unsigned char c){ return std::toupper(c); });
+
+            std::cout << "CUSTOMER_SSN: " << CUSTOMER_SSN << std::endl;
+
+            SHA1 checksum;
+            auto sfinal = MAC0+TARGETHOSTNAME+CUSTOMER_SSN;
+            std::cout << "sfinal: " << sfinal << std::endl;
+
+            checksum.update(sfinal.c_str());
+            cout << "\n Checksum : " << checksum.final() ;
+
+            return 0;
+            //pConfiguration->setHardwareID("HEXAGONSN1102323");
+
+        }else if(hwid_opt==3){
+            //generate own hwid algorithm
+            //however inside docker not able to read 
+            //1. hostname, 2. mac, 3. cpuid 
+            //cout << getCpuId() << std::endl; 
+            //cout << machineid::machineHash() << std::endl; 
+        }else{
+
+        }
+            
 
         std::cout << "------------- Network info -------------" << std::endl;
         std::cout << "Host name:   " << pConfiguration->getNetworkInfo().hostName() << std::endl;
