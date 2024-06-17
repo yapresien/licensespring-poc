@@ -1,43 +1,43 @@
 #include "KeyBasedSample.h"
+#include <cassert>
 #include <iostream>
 
 using namespace LicenseSpring;
 
+//First time online license installation 
 void KeyBasedSample::runOnline( bool deactivateAndRemove )
 {
     auto license = m_licenseManager->getCurrentLicense();
-
-    if( license == nullptr )
-    {
-        // Assign some license key here or leave it empty to test trial key
-        auto licenseId = LicenseID::fromKey("HA74-LJ7D-NT6J-RUBS" );
-        if( licenseId.isEmpty() )
-        {
-            licenseId = m_licenseManager->getTrialLicense();
-            std::cout << "Got trial license: " << licenseId.id() << std::endl;
-        }
-
-        license = m_licenseManager->activateLicense( licenseId );
-        license->addDeviceVariable("DV0", "value0", false);
-        license->addDeviceVariable("DV1", "value1", false);
-        std::cout << "License activated successfully" << std::endl;
+    if(license){
+        std::cout <<"\nError - License is already installed.";
+        return;
     }
-    else
-        checkLicenseLocal( license );
 
-    if( license->isFloating() )
-        setupAutomaticLicenseUpdates( license );
-    else
-        updateAndCheckLicense( license );
+    auto licenseId = LicenseID::fromKey("HAGJ-ET4H-8CJJ-RKBS" );
+    if(licenseId.isEmpty())
+    {
+        std::cout <<"\nError - Invalid License Key supplied.";
+        return;        
+    }
 
+    license = m_licenseManager->activateLicense( licenseId );
+    //license->addDeviceVariable("DV0", "value0", false);
+    //license->addDeviceVariable("DV1", "value1", false);
+    std::cout << "SUCCESS - License activated successfully.." << std::endl;
+    //AY - update license is disabled for current poc installation
+    //updateAndCheckLicense( license );
+
+#ifdef __DEBUG
     PrintLicense( license );
-
     printUpdateInfo();
+#endif
 
     if( deactivateAndRemove )
         cleanUp( license );
 }
 
+//AY - Below method is redundant for Presien case
+// Keeping the code to refer in future to SDK source.
 void KeyBasedSample::runOffline( bool deactivateAndRemove )
 {
     auto license = m_licenseManager->getCurrentLicense();
@@ -51,7 +51,7 @@ void KeyBasedSample::runOffline( bool deactivateAndRemove )
         {
             std::cout << "Offline activation error\n";
 
-            auto licenseId = LicenseID::fromKey( "" ); // Assign some license key here
+            auto licenseId = LicenseID::fromKey( "HAGJ-ET4H-8CJJ-RKBS" ); // Assign some license key here
             if( licenseId.isEmpty() )
             {
                 licenseId = m_licenseManager->getTrialLicense();

@@ -14,30 +14,122 @@
 
 using namespace LicenseSpring;
 
-int TestFloatingServer( LicenseSpring::Configuration::ptr_t config );
-using namespace std;
-int main(int argc, char** argv)
-{
+#include <algorithm>
+#include <cctype>
+#include <string>
 
-    bool deactivateAndRemove = false; // deactivate and remove the license after sample execution
-    if(argc == 2 ){
-        string v1=argv[1];
-        int da = stol(v1);
-        if( da == 1 || da == 0 )
-            deactivateAndRemove = da == 1 ? true:false;
+using namespace std;
+
+
+enum class ACTION_CENTRE{
+    INVALID_ACTION,
+    VALIDATE = 0,
+    INSTALL,
+    UPDATE,
+    DEACTIVATE,
+    PURGE
+};
+
+static ACTION_CENTRE gAction = ACTION_CENTRE::INVALID_ACTION;
+
+void PraseCmdParamsIfInstall( int argc, char**argv ){
+    
+    if(argc != 2 ){
+        gAction = ACTION_CENTRE::VALIDATE;
+        return ;//always offline validate
     }
 
+    string cmd=argv[1];
+    std::transform(cmd.begin(), cmd.end(), cmd.begin(),
+        [](unsigned char c){ return std::tolower(c); });
+
+    std::string install_cmd = "install";
+    std::string update_cmd = "update";
+    if (cmd == "install") {
+        gAction = ACTION_CENTRE::INSTALL;
+    }
+    else if( cmd == "update"){
+        std::cout << "\n Err - Update license action not supported.\n";
+        gAction = ACTION_CENTRE::UPDATE;
+    }
+    else if( cmd == "deactivate"){
+        std::cout << "\n Err - Deactivate license action not supported.\n";
+        gAction = ACTION_CENTRE::DEACTIVATE;
+    }else if( cmd == "purge"){
+        std::cout << "\n Err - Purge license action not supported.\n";
+        gAction = ACTION_CENTRE::PURGE;
+    }
+    else{
+        gAction = ACTION_CENTRE::VALIDATE;
+    }
+}
+
+
+bool InstallLicenseOnline( const LicenseManager::ptr_t& licenseManager, bool deactivateAndRemove){
+
+    std::cout << "\nActivating Install mode -----------";
+    std::cout << "\nActivating ------------------------";
+    std::cout << "\nActivated Install mode ------------\n";
+    
+    shared_ptr<SampleBase> kbsample = nullptr;
+    kbsample.reset(new KeyBasedSample(licenseManager));
+    std::cout << "Authorization method:     Key-based" << std::endl;
+
+    // Print Product latest version if available
+    // auto productInstallPackage = productInfo.installationFile();
+    // if( productInstallPackage )
+    // {
+    //     std::cout << "Latest installation package information" << std::endl;
+    //     SampleBase::printProductVersionInfo( productInstallPackage );
+    // }
+
+    if( !licenseManager->isOnline() )
+    {
+        std::cout <<"\n Error - Offline system cannot install license.";
+        return false;
+    }
+    
+    std::cout <<"\n System is online -----";
+    kbsample->runOnline( deactivateAndRemove );
+    return true;
+}
+
+bool ValidateLicenseOffline( const LicenseManager::ptr_t& licenseManager, 
+                              bool deactivateAndRemove=false){
+    std::cout << "\n Validating offline mode -----------";
+    std::cout << "\nActivating -------------------------";
+    std::cout << "\nActivated  -------------------------\n";
+
+    auto license = licenseManager->getCurrentLicense();
+    if(!license){
+        std::cerr <<"\n Error - failed to get local license. License not installed.\n";
+        return false;
+    }
+
+    shared_ptr<SampleBase> kbsample = nullptr;
+    kbsample.reset(new KeyBasedSample(licenseManager));
+    
+    //Throw exception if failed local check
+    kbsample->checkLicenseLocal( license ); 
+
+    return true;
+}
+
+int main(int argc, char** argv)
+{
 #ifdef _WIN32
     // Enable displaying Unicode symbols in console (custom fields and metadata are UTF-8 encoded)
     SetConsoleOutputCP( CP_UTF8 );
     setvbuf( stdout, nullptr, _IOFBF, 1000 );
 #endif
 
+    bool deactivateAndRemove = false; // deactivate and remove the license after sample execution
     try
     {
-        AppConfig appConfig( "C++ Sample", "3.1" );
+        PraseCmdParamsIfInstall(argc, argv);
+        AppConfig appConfig("C++ Sample", "3.1");
 
-        auto pConfiguration = appConfig.createLicenseSpringConfig( );
+        auto pConfiguration = appConfig.createLicenseSpringConfig();
 
         std::cout << "------------- General info -------------" << std::endl;
         std::cout << pConfiguration->getAppName() + ' ' << pConfiguration->getAppVersion() << std::endl;
@@ -53,11 +145,9 @@ int main(int argc, char** argv)
         std::cout << "MAC address: " << pConfiguration->getNetworkInfo().mac() << std::endl;
         std::cout << std::endl;
 
-
-        auto licenseManager = LicenseManager::create( pConfiguration );
-
-        // Get basic information about configured product
-        auto productInfo = licenseManager->getProductDetails( true );
+        auto lmgr = LicenseManager::create(pConfiguration);
+        // Get basic information about configured product - only possible in online mode
+        auto productInfo = lmgr->getProductDetails(true);
 
         std::cout << "------------- Product info -------------" << std::endl;
         std::cout << "Product name:             " << productInfo.productName() << std::endl;
@@ -65,35 +155,11 @@ int main(int argc, char** argv)
         std::cout << "Trial allowed:            " << productInfo.isTrialAllowed() << std::endl;
         std::cout << "Metadata:                 " << productInfo.metadata() << std::endl;
 
-        // auto timeout = productInfo.floatingLicenseTimeout();
-        // if( timeout > 0 )
-        //     std::cout << "Floating license timeout: " << timeout << " min" << std::endl;
-
-        // if( productInfo.isTrialAllowed() && productInfo.trialPeriod() > 0 )
-        // {
-        //     std::string periodStr = "Trial period:             " +
-        //         std::to_string( productInfo.trialPeriod() ) + " day";
-        //     if( productInfo.trialPeriod() > 1 )
-        //         periodStr += "s";
-        //     std::cout << periodStr << std::endl;
-        // }
-
-        std::shared_ptr<SampleBase> sample = nullptr;
-        std::string authMethod = "Authorization method:     ";
-
-        if( productInfo.authorizationMethod() == AuthMethodKeyBased )
+        if (AuthMethodKeyBased != productInfo.authorizationMethod())
         {
-            sample.reset( new KeyBasedSample( licenseManager ) );
-            authMethod += "Key-based";
+            throw("\n Exception - Only KeyBased authentication supported.");
+            return false;
         }
-        else
-        {
-            sample.reset( new UserBasedSample( licenseManager ) );
-            authMethod += "User-based";
-        }
-
-        std::cout << authMethod << std::endl << std::endl;
-
         // Detect virtualized environment
         if( pConfiguration->isVMDetectionEnabled() )
         {
@@ -110,35 +176,34 @@ int main(int argc, char** argv)
             std::cout << msg << std::endl << std::endl;
         }
 
-        // Print Product latest version if available
-        auto productInstallPackage = productInfo.installationFile();
-        if( productInstallPackage )
-        {
-            std::cout << "Latest installation package information" << std::endl;
-            SampleBase::printProductVersionInfo( productInstallPackage );
+        switch(gAction){
+            case ACTION_CENTRE::INSTALL:
+                InstallLicenseOnline(lmgr, deactivateAndRemove);
+                break;
+            case ACTION_CENTRE::VALIDATE:
+                ValidateLicenseOffline(lmgr, deactivateAndRemove);
+                break;
+            default:
+                std::cerr << "\n Default action not supported.";
         }
 
-        // Run appropriate sample
-        if( licenseManager->isOnline() )
-            sample->runOnline( deactivateAndRemove );
-        else
-            sample->runOffline( deactivateAndRemove );
 
+        std::cout <<"\n\n";
         return 0;
     }
     catch( const LicenseSpringException& ex )
     {
-        std::cout << "LicenseSpring exception encountered: " << ex.what();
+        std::cout << "LicenseSpring exception encountered: " << ex.what();std::cout <<"\n\n";
         return static_cast<int>( ex.getCode() );
     }
     catch( const std::exception& ex )
     {
-        std::cout << "Standard exception encountered: " << ex.what();
+        std::cout << "Standard exception encountered: " << ex.what();std::cout <<"\n\n";
         return -1;
     }
     catch( ... )
     {
-        std::cout << "Unknown exception encountered!";
+        std::cout << "Unknown exception encountered!";std::cout <<"\n\n";
         return -3;
     }
 }
