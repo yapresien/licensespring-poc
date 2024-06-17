@@ -249,6 +249,8 @@ const char *getMachineName() {
 	unsigned short getCpuHash() {
 		unsigned int cpuinfo[4] = {0, 0, 0, 0};
 		getCpuid(&cpuinfo[0], &cpuinfo[1], &cpuinfo[2], &cpuinfo[3]);
+		printf("\n getCpuHash : %x %x %x %x\n", cpuinfo[3], cpuinfo[2],cpuinfo[1],cpuinfo[0] );
+
 		unsigned short hash = 0;
 		unsigned int *ptr = (&cpuinfo[0]);
 		for (unsigned int i = 0; i < 4; i++)
@@ -290,10 +292,13 @@ const char *getMachineName() {
 		std::stringstream stream;
 
 		stream << getMachineName();
+		std::cout <<"\n getMachineName: " << getMachineName();
 		stream << getCpuHash();
 		stream << getVolumeHash();
+		std::cout <<"\n getVolumeHash: " << getVolumeHash();
 
 		auto string = stream.str();
+		std::cout<< "\n" << string << endl;
 
 		while (string.size() < TargetLength) {
 			string = string + string;
