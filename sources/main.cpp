@@ -138,12 +138,13 @@ bool DeactivateLicense(const LicenseManager::ptr_t& licenseManager){
             std::cout <<"\nError - Invalid License Key supplied.";
             return false;        
         }
-        license = m_licenseManager->activateLicense( licenseId );
+        license = licenseManager->activateLicense( licenseId );
     }
 
-    updateAndCheckLicense( license );
+    
     shared_ptr<SampleBase> kbsample = nullptr;
     kbsample.reset(new KeyBasedSample(licenseManager));
+    kbsample->updateAndCheckLicense( license );
     kbsample->cleanUp( license );
     return true;
 }
