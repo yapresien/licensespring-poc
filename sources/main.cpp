@@ -19,12 +19,10 @@ using namespace LicenseSpring;
 #include <string>
 
 #include "cpu-info.h"
-
-#include "MachineId.hpp"
 #include "Sha1.hpp"
 
-
 using namespace std;
+
 enum class ACTION_CENTRE{
     INVALID_ACTION,
     VALIDATE = 0,
@@ -67,17 +65,18 @@ void PraseCmdParamsIfInstall( int argc, char**argv ){
 
 wstring GetPresienLicStorePath(const LicenseManager::ptr_t& lmgr)
 {
-    wcout << "\n Lic filepath = " << lmgr->licenseFilePath() << std::endl;
-    wcout << "Lic file name = " << lmgr->licenseFileName() << std::endl;
     wstring localdatastorePath = lmgr->dataLocation();
-    wcout << "localdatastorePath = " << localdatastorePath << std::endl;
-    wstring newPath = L"/PresienLic/" + localdatastorePath;
-    wcout << "Lic newPath = " << newPath<< std::endl;
+    wstring newPath = L"/PresienLic" + localdatastorePath;
+    #ifdef __DEBUG
+        wcout << "\n Lic filepath = " << lmgr->licenseFilePath() << std::endl;
+        wcout << "Lic file name = " << lmgr->licenseFileName() << std::endl;
+        wcout << "localdatastorePath = " << localdatastorePath << std::endl;
+        wcout << "Lic newPath = " << newPath<< std::endl;
+    #endif
     return newPath;
 }
 
-bool InstallLicenseOnline( const LicenseManager::ptr_t& lmgr, 
-                            bool deactivateAndRemove){
+bool InstallLicenseOnline( const LicenseManager::ptr_t& lmgr){
 
     std::cout << "\nActivating Install mode -----------";
     std::cout << "\nActivating ------------------------";
@@ -85,28 +84,17 @@ bool InstallLicenseOnline( const LicenseManager::ptr_t& lmgr,
     
     shared_ptr<SampleBase> kbsample = nullptr;
     kbsample.reset(new KeyBasedSample(lmgr));
-    std::cout << "Authorization method:     Key-based" << std::endl;
-
-    // Print Product latest version if available
-    // auto productInstallPackage = productInfo.installationFile();
-    // if( productInstallPackage )
-    // {
-    //     std::cout << "Latest installation package information" << std::endl;
-    //     SampleBase::printProductVersionInfo( productInstallPackage );
-    // }
-
     if( !lmgr->isOnline() )
     {
         std::cout <<"\n Error - Offline system cannot install license.";
         return false;
     }
     std::cout <<"\n System is online -----";
-    kbsample->runOnline( deactivateAndRemove );
+    kbsample->runOnline();
     return true;
 }
 
-bool ValidateLicenseOffline( const LicenseManager::ptr_t& lmgr, 
-                            bool deactivateAndRemove=false){
+bool ValidateLicenseOffline( const LicenseManager::ptr_t& lmgr){
     std::cout << "\n Validating offline mode -----------";
     std::cout << "\nActivating -------------------------";
     std::cout << "\nActivated  -------------------------\n";
@@ -119,10 +107,8 @@ bool ValidateLicenseOffline( const LicenseManager::ptr_t& lmgr,
 
     shared_ptr<SampleBase> kbsample = nullptr;
     kbsample.reset(new KeyBasedSample(lmgr));
-    
     //Throw exception if failed local check
     kbsample->checkLicenseLocal( license ); 
-
     return true;
 }
 
@@ -174,8 +160,6 @@ std::string readFile(std::string const& file)
 	std::getline(ss, m);
     return m;
 }
-
-
 
 int main(int argc, char** argv)
 {
@@ -239,9 +223,7 @@ int main(int argc, char** argv)
             std::transform(CUSTOMER_SSN.begin(), CUSTOMER_SSN.end(), CUSTOMER_SSN.begin(),
                 [](unsigned char c){ return std::toupper(c); });
 
-            std::cout << "CUSTOMER_SSN: " << CUSTOMER_SSN << std::endl;
-
-            
+            std::cout << "CUSTOMER_SSN: " << CUSTOMER_SSN << std::endl;           
             auto sfinal = MAC1+TARGETHOSTNAME+CUSTOMER_SSN;
             checksum.update(sfinal.c_str());
             string hw_sha1 = checksum.final();
@@ -250,12 +232,18 @@ int main(int argc, char** argv)
             cout << "ENV HardWareID : " <<  hw_sha1 << std::endl;          
             pConfiguration->setHardwareID(hw_sha1);
 
-        }else if(hwid_opt==3){
-            #ifdef __DEBUG
-                auto tegra_cpu_uid = readFile("/etc/machine-id");
-            #else 
-                auto tegra_cpu_uid = readFile("/sys/module/tegra_fuse/parameters/tegra_chip_uid");
-            #endif
+        }else {
+            string tegra_cpu_uid;
+            try{
+                tegra_cpu_uid = readFile("/sys/module/tegra_fuse/parameters/tegra_chip_uid");
+            }catch(...){
+                #ifdef __DEBUG
+                    tegra_cpu_uid = readFile("/etc/machine-id");
+                    cout <<"\n Tegra stream not found, generalizing to x86 for debugging purpose only.";
+                #else 
+                    return 0;
+                #endif
+            }
             //generate own hwid algorithm
             checksum.update(tegra_cpu_uid.c_str());
             string hw_sha1 = checksum.final();
@@ -263,27 +251,26 @@ int main(int argc, char** argv)
             std::cout << "Input String: " << tegra_cpu_uid << std::endl;
             cout << "Presien HardWareID : " <<  hw_sha1 << std::endl;          
             pConfiguration->setHardwareID(hw_sha1);
-        }else{
-
         }
 
+#ifdef __DEBUG
         std::cout << "------------- Network info -------------" << std::endl;
         std::cout << "Host name:   " << pConfiguration->getNetworkInfo().hostName() << std::endl;
         std::cout << "Local IP:    " << pConfiguration->getNetworkInfo().ip() << std::endl;
         std::cout << "MAC address: " << pConfiguration->getNetworkInfo().mac() << std::endl;
         std::cout << std::endl;
-
+#endif
         auto lmgr = LicenseManager::create(pConfiguration);
         lmgr->setDataLocation(GetPresienLicStorePath(lmgr));
         // Get basic information about configured product - only possible in online mode
         auto productInfo = lmgr->getProductDetails(true);
-
+#ifdef __DEBUG
         std::cout << "------------- Product info -------------" << std::endl;
         std::cout << "Product name:             " << productInfo.productName() << std::endl;
         std::cout << "Virtual machines allowed: " << productInfo.isVMAllowed() << std::endl;
         std::cout << "Trial allowed:            " << productInfo.isTrialAllowed() << std::endl;
         std::cout << "Metadata:                 " << productInfo.metadata() << std::endl;
-
+#endif
         if (AuthMethodKeyBased != productInfo.authorizationMethod())
         {
             throw("\n Exception - Only KeyBased authentication supported.");
@@ -307,13 +294,13 @@ int main(int argc, char** argv)
 
         switch(gAction){
             case ACTION_CENTRE::VALIDATE:
-                ValidateLicenseOffline(lmgr, deactivateAndRemove);
+                ValidateLicenseOffline(lmgr);
                 break;
             case ACTION_CENTRE::INSTALL:
                 {
-                    if(!ValidateLicenseOffline(lmgr, deactivateAndRemove) )
+                    if(!ValidateLicenseOffline(lmgr) )
                     {
-                        InstallLicenseOnline(lmgr, deactivateAndRemove);
+                        InstallLicenseOnline(lmgr);
                     }
                 }
                 break;

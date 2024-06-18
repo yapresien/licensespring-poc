@@ -25,14 +25,12 @@ void KeyBasedSample::runOnline( bool deactivateAndRemove )
     //license->addDeviceVariable("DV0", "value0", false);
     //license->addDeviceVariable("DV1", "value1", false);
     std::cout << "SUCCESS - License activated successfully.." << std::endl;
-    //AY - update license is disabled for current poc installation
+    //AY - required to send device variables
     updateAndCheckLicense( license );
-
+#ifdef __DEBUG
     PrintLicense( license );
     printUpdateInfo();
-
-    // if( deactivateAndRemove )
-    //     cleanUp( license );
+#endif
 }
 
 //AY - Below method is redundant for Presien case
