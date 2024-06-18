@@ -65,8 +65,18 @@ void PraseCmdParamsIfInstall( int argc, char**argv ){
     }
 }
 
+wstring GetPresienLicStorePath(const LicenseManager::ptr_t& lmgr)
+{
+    wcout << "\n Lic filepath = " << lmgr->licenseFilePath() << std::endl;
+    wcout << "Lic file name = " << lmgr->licenseFileName() << std::endl;
+    wstring localdatastorePath = lmgr->dataLocation();
+    wcout << "localdatastorePath = " << localdatastorePath << std::endl;
+    wstring newPath = L"/PresienLic/" + localdatastorePath;
+    wcout << "Lic newPath = " << newPath<< std::endl;
+    return newPath;
+}
 
-bool InstallLicenseOnline( const LicenseManager::ptr_t& licenseManager, 
+bool InstallLicenseOnline( const LicenseManager::ptr_t& lmgr, 
                             bool deactivateAndRemove){
 
     std::cout << "\nActivating Install mode -----------";
@@ -74,7 +84,7 @@ bool InstallLicenseOnline( const LicenseManager::ptr_t& licenseManager,
     std::cout << "\nActivated Install mode ------------\n";
     
     shared_ptr<SampleBase> kbsample = nullptr;
-    kbsample.reset(new KeyBasedSample(licenseManager));
+    kbsample.reset(new KeyBasedSample(lmgr));
     std::cout << "Authorization method:     Key-based" << std::endl;
 
     // Print Product latest version if available
@@ -85,37 +95,30 @@ bool InstallLicenseOnline( const LicenseManager::ptr_t& licenseManager,
     //     SampleBase::printProductVersionInfo( productInstallPackage );
     // }
 
-    if( !licenseManager->isOnline() )
+    if( !lmgr->isOnline() )
     {
         std::cout <<"\n Error - Offline system cannot install license.";
         return false;
     }
-    wcout << "\n Lic filepath = " << licenseManager->licenseFilePath() << std::endl;
-    wcout << "\n Lic file name = " << licenseManager->licenseFileName() << std::endl;
-    wstring localdatastorePath = licenseManager->dataLocation();
-    wcout << "\n localdatastorePath = " << localdatastorePath << std::endl;
-    wstring newPath = L"/PresienLic/" + localdatastorePath;
-    wcout << "\n Lic newPath = " << newPath<< std::endl;
-    licenseManager->setDataLocation(newPath);
     std::cout <<"\n System is online -----";
     kbsample->runOnline( deactivateAndRemove );
     return true;
 }
 
-bool ValidateLicenseOffline( const LicenseManager::ptr_t& licenseManager, 
+bool ValidateLicenseOffline( const LicenseManager::ptr_t& lmgr, 
                             bool deactivateAndRemove=false){
     std::cout << "\n Validating offline mode -----------";
     std::cout << "\nActivating -------------------------";
     std::cout << "\nActivated  -------------------------\n";
 
-    auto license = licenseManager->getCurrentLicense();
+    auto license = lmgr->getCurrentLicense();
     if(!license){
         std::cerr <<"\n Error - failed to get local license. License not installed.\n";
         return false;
     }
 
     shared_ptr<SampleBase> kbsample = nullptr;
-    kbsample.reset(new KeyBasedSample(licenseManager));
+    kbsample.reset(new KeyBasedSample(lmgr));
     
     //Throw exception if failed local check
     kbsample->checkLicenseLocal( license ); 
@@ -123,19 +126,19 @@ bool ValidateLicenseOffline( const LicenseManager::ptr_t& licenseManager,
     return true;
 }
 
-bool UpdateLicense(const LicenseManager::ptr_t& licenseManager){
+bool UpdateLicense(const LicenseManager::ptr_t& lmgr){
     std::cout << "\n UpdateLicense -- to be implemented.";
     return false;
 }
 
-bool DeactivateLicense(const LicenseManager::ptr_t& licenseManager){
+bool DeactivateLicense(const LicenseManager::ptr_t& lmgr){
     std::cout << "\n DeactivateLicense and removing from local store -- Online only.";
-    if( !licenseManager->isOnline() )
+    if( !lmgr->isOnline() )
     {
         std::cout <<"\n Error - Offline system cannot deactivate license.";
         return false;
     }
-    auto license = licenseManager->getCurrentLicense();
+    auto license = lmgr->getCurrentLicense();
     if(!license){
         std::cout <<"\nError - No local license to remove.";
         auto licenseId = LicenseID::fromKey("HAGJ-ET4H-8CJJ-RKBS" );
@@ -144,12 +147,12 @@ bool DeactivateLicense(const LicenseManager::ptr_t& licenseManager){
             std::cout <<"\nError - Invalid License Key supplied.";
             return false;        
         }
-        license = licenseManager->activateLicense( licenseId );
+        license = lmgr->activateLicense( licenseId );
     }
 
     
     shared_ptr<SampleBase> kbsample = nullptr;
-    kbsample.reset(new KeyBasedSample(licenseManager));
+    kbsample.reset(new KeyBasedSample(lmgr));
     kbsample->updateAndCheckLicense( license );
     kbsample->cleanUp( license );
     return true;
@@ -177,7 +180,10 @@ std::string readFile(std::string const& file)
 	// Remove ending line character '\n' or '\r\n'.
 	std::getline(ss, m);
     return m;
-} 
+}
+
+
+
 int main(int argc, char** argv)
 {
    
@@ -275,6 +281,7 @@ int main(int argc, char** argv)
         std::cout << std::endl;
 
         auto lmgr = LicenseManager::create(pConfiguration);
+        lmgr->setDataLocation(GetPresienLicStorePath(lmgr));
         // Get basic information about configured product - only possible in online mode
         auto productInfo = lmgr->getProductDetails(true);
 
