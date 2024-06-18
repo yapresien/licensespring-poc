@@ -90,14 +90,12 @@ bool InstallLicenseOnline( const LicenseManager::ptr_t& licenseManager,
         std::cout <<"\n Error - Offline system cannot install license.";
         return false;
     }
-    cout << "\n Lic filepath = " << licenseManager->licenseFilePath().c_str() << std::endl;
-    cout << "\n Lic file name = " << licenseManager->licenseFileName().c_str() << std::endl;
+    wcout << "\n Lic filepath = " << licenseManager->licenseFilePath() << std::endl;
+    wcout << "\n Lic file name = " << licenseManager->licenseFileName() << std::endl;
     wstring localdatastorePath = licenseManager->dataLocation();
-    cout << "\n localdatastorePath = " << localdatastorePath.c_str() << std::endl;
-
+    wcout << "\n localdatastorePath = " << localdatastorePath << std::endl;
     wstring newPath = L"/PresienLic/" + localdatastorePath;
-
-    cout << "\n Lic newPath = " << newPath.c_str() << std::endl;
+    wcout << "\n Lic newPath = " << newPath<< std::endl;
     licenseManager->setDataLocation(newPath);
     std::cout <<"\n System is online -----";
     kbsample->runOnline( deactivateAndRemove );
@@ -182,10 +180,7 @@ std::string readFile(std::string const& file)
 } 
 int main(int argc, char** argv)
 {
-    //cout << getCpuId() << std::endl; 
-    auto tegra_cpu_uid = readFile("/sys/module/tegra_fuse/parameters/tegra_chip_uid");
-
-    
+   
 #ifdef _WIN32
     // Enable displaying Unicode symbols in console (custom fields and metadata are UTF-8 encoded)
     SetConsoleOutputCP( CP_UTF8 );
@@ -208,7 +203,8 @@ int main(int argc, char** argv)
         std::cout << "Hardware ID: " << pConfiguration->getHardwareID() << std::endl;
         std::cout << std::endl;
 
-        int hwid_opt = 2;
+        SHA1 checksum;
+        int hwid_opt = 3;
         if(hwid_opt == 1){
             //license spring sdk generated hwid
             std::cout << "Hardware ID: " << pConfiguration->getHardwareID() << std::endl;
@@ -246,24 +242,28 @@ int main(int argc, char** argv)
 
             std::cout << "CUSTOMER_SSN: " << CUSTOMER_SSN << std::endl;
 
-            SHA1 checksum;
+            
             auto sfinal = MAC1+TARGETHOSTNAME+CUSTOMER_SSN;
-            // checksum.update(sfinal.c_str());
-            // string hw_sha1 = checksum.final();
-
-            checksum.update(tegra_cpu_uid.c_str());
+            checksum.update(sfinal.c_str());
             string hw_sha1 = checksum.final();
             
-            std::cout << "Input String: " << tegra_cpu_uid ;
-            cout << "\nPresien HardWareID : " <<  hw_sha1 << std::endl;          
+            std::cout << "Input String: " << sfinal << std::endl;
+            cout << "ENV HardWareID : " <<  hw_sha1 << std::endl;          
             pConfiguration->setHardwareID(hw_sha1);
 
         }else if(hwid_opt==3){
+            #ifdef __DEBUG
+                auto tegra_cpu_uid = readFile("/etc/machine-id");
+            #else 
+                auto tegra_cpu_uid = readFile("/sys/module/tegra_fuse/parameters/tegra_chip_uid");
+            #endif
             //generate own hwid algorithm
-            //however inside docker not able to read 
-            //1. hostname, 2. mac, 3. cpuid 
-            //cout << getCpuId() << std::endl; 
-            //cout << machineid::machineHash() << std::endl; 
+            checksum.update(tegra_cpu_uid.c_str());
+            string hw_sha1 = checksum.final();
+            
+            std::cout << "Input String: " << tegra_cpu_uid << std::endl;
+            cout << "Presien HardWareID : " <<  hw_sha1 << std::endl;          
+            pConfiguration->setHardwareID(hw_sha1);
         }else{
 
         }
