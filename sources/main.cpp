@@ -56,11 +56,8 @@ void PraseCmdParamsIfInstall( int argc, char**argv ){
         std::cout << "\n Err - Update license action not supported.\n";
         gAction = ACTION_CENTRE::UPDATE;
     }
-    else if( cmd == "deactivate"){
-        std::cout << "\n Err - Deactivate license action not supported.\n";
-        gAction = ACTION_CENTRE::DEACTIVATE;
-    }else if( cmd == "purge"){
-        std::cout << "\n Err - Purge license action not supported.\n";
+    else if( (cmd == "deactivate")||(cmd == "purge") ){
+        std::cout << "\n WARN - deactivation | Purge license action requested.\n";
         gAction = ACTION_CENTRE::PURGE;
     }
     else{
@@ -126,15 +123,20 @@ bool UpdateLicense(const LicenseManager::ptr_t& licenseManager){
 }
 
 bool DeactivateLicense(const LicenseManager::ptr_t& licenseManager){
-    std::cout << "\n DeactivateLicense -- to be implemented.";
-    return false;
+    std::cout << "\n DeactivateLicense and removing from local store -- Online only.";
+    if( !licenseManager->isOnline() )
+    {
+        std::cout <<"\n Error - Offline system cannot deactivate license.";
+        return false;
+    }
+    auto license = m_licenseManager->getCurrentLicense();
+    if(!license){
+        std::cout <<"\nError - No license installed.";
+        return false;
+    }
+    cleanUp( license );
+    return true;
 }
-
-bool PurgeLicense(const LicenseManager::ptr_t& licenseManager){
-    std::cout << "\n PurgeLicense -- to be implemented.";
-    return false;
-}
-
 
 std::string GetEnv( const std::string & var ) {
      const char * val = std::getenv( var.c_str() );
@@ -300,10 +302,8 @@ int main(int argc, char** argv)
                 UpdateLicense(lmgr);
                 break;
             case ACTION_CENTRE::DEACTIVATE:
-                DeactivateLicense(lmgr);
-                break;
             case ACTION_CENTRE::PURGE:
-                PurgeLicense(lmgr);
+                DeactivateLicense(lmgr);
                 break;
             default:
                 std::cerr << "\n Default action not supported.";
