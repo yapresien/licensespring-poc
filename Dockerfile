@@ -8,6 +8,7 @@ RUN apt-get update \
        build-essential \
        cmake \
        git \
+       pkg-config \
        libcpuinfo-dev \
        software-properties-common \
        rsyslog systemd systemd-cron sudo \
@@ -19,15 +20,13 @@ RUN sed -i 's/^\($ModLoad imklog\)/#\1/' /etc/rsyslog.conf
 # WORKDIR /
 # RUN mkdir -p sources
 # WORKDIR /sources
-
 # RUN cd $WORDKDIR
-
 
 ## dependency cpuinof source
 RUN git clone https://github.com/pytorch/cpuinfo.git
 WORKDIR /cpuinfo
-RUN pwd
-RUN ls -ll
+#RUN pwd
+#RUN ls -ll
 RUN git pull
 RUN mkdir -p ./build
 RUN cd ./build
