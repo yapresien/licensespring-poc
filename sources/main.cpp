@@ -132,7 +132,16 @@ bool DeactivateLicense(const LicenseManager::ptr_t& licenseManager){
     auto license = licenseManager->getCurrentLicense();
     if(!license){
         std::cout <<"\nError - No local license to remove.";
+        auto licenseId = LicenseID::fromKey("HAGJ-ET4H-8CJJ-RKBS" );
+        if(licenseId.isEmpty())
+        {
+            std::cout <<"\nError - Invalid License Key supplied.";
+            return false;        
+        }
+        license = m_licenseManager->activateLicense( licenseId );
     }
+
+    updateAndCheckLicense( license );
     shared_ptr<SampleBase> kbsample = nullptr;
     kbsample.reset(new KeyBasedSample(licenseManager));
     kbsample->cleanUp( license );
