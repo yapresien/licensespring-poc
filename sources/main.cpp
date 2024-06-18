@@ -131,8 +131,7 @@ bool DeactivateLicense(const LicenseManager::ptr_t& licenseManager){
     }
     auto license = licenseManager->getCurrentLicense();
     if(!license){
-        std::cout <<"\nError - No license installed.";
-        return false;
+        std::cout <<"\nError - No local license to remove.";
     }
     shared_ptr<SampleBase> kbsample = nullptr;
     kbsample.reset(new KeyBasedSample(licenseManager));
