@@ -18,7 +18,7 @@ using namespace LicenseSpring;
 #include <cctype>
 #include <string>
 
-//#include "cpu-info.h"
+#include "cpu-info.h"
 
 #include "MachineId.hpp"
 #include "Sha1.hpp"
@@ -148,8 +148,8 @@ std::string GetEnv( const std::string & var ) {
 
 int main(int argc, char** argv)
 {
-    //cout << getCpuId() << std::endl; 
-    //cout << machineid::machineHash() << std::endl; 
+    cout << getCpuId() << std::endl; 
+    cout << machineid::machineHash() << std::endl; 
     
 #ifdef _WIN32
     // Enable displaying Unicode symbols in console (custom fields and metadata are UTF-8 encoded)
@@ -213,13 +213,13 @@ int main(int argc, char** argv)
 
             SHA1 checksum;
             auto sfinal = MAC1+TARGETHOSTNAME+CUSTOMER_SSN;
-            std::cout << "sfinal: " << sfinal << std::endl;
+            std::cout << "Input String: " << sfinal ;
 
             checksum.update(sfinal.c_str());
-            cout << "\n Checksum : " << checksum.final() ;
-
-            return 0;
-            //pConfiguration->setHardwareID("HEXAGONSN1102323");
+            string hw_sha1 = checksum.final();
+            cout << "\n Presien HardWareID : " <<  hw_sha1 ;
+            
+            pConfiguration->setHardwareID(hw_sha1);
 
         }else if(hwid_opt==3){
             //generate own hwid algorithm

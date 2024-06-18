@@ -16,7 +16,27 @@ RUN apt-get update \
     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man
 RUN sed -i 's/^\($ModLoad imklog\)/#\1/' /etc/rsyslog.conf
 
+# WORKDIR /
+# RUN mkdir -p sources
+# WORKDIR /sources
 
+# RUN cd $WORDKDIR
+
+
+## dependency cpuinof source
+RUN git clone https://github.com/pytorch/cpuinfo.git
+WORKDIR /cpuinfo
+RUN pwd
+RUN ls -ll
+RUN git pull
+RUN mkdir -p ./build
+RUN cd ./build
+RUN cmake /cpuinfo
+RUN cmake --build .
+RUN make install
+
+
+WORKDIR /
 RUN git clone --depth 1 https://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@github.com/yapresien/licensespring-poc.git
 
 
@@ -31,7 +51,9 @@ RUN bash ./build.sh
 #deactivate
 WORKDIR /licensespring-poc/sources/release_static
 
+RUN export PATH=$PATH:$WORKDIR
 # below command will force to RUN everytime 
-ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
-#RUN ./presien-lic-app
+# ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
+
+CMD ["/licensespring-poc/sources/release_static/presien-lic-app" , "install" ]
 
