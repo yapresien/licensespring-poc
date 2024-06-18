@@ -145,10 +145,26 @@ std::string GetEnv( const std::string & var ) {
          return val;
      }
 }
-
+// Requires: <string>, <stream>, <sstream>
+std::string readFile(std::string const& file) 
+{
+    std::ifstream is(file);
+    if( !is.good() ){
+        throw std::runtime_error("Error: stream has errors.");
+    }
+    std::stringstream ss;
+    ss << is.rdbuf();	
+	std::string m;
+	// Remove ending line character '\n' or '\r\n'.
+	std::getline(ss, m);
+    return m;
+} 
 int main(int argc, char** argv)
 {
-    cout << getCpuId() << std::endl; 
+    //cout << getCpuId() << std::endl; 
+    auto result = readFile("/sys/module/tegra_fuse/parameters/tegra_chip_uid");
+    cout << "result : " << result;
+    return 0;
     //cout << machineid::machineHash() << std::endl; 
     
 #ifdef _WIN32
