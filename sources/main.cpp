@@ -140,16 +140,9 @@ bool DeactivateLicense(const LicenseManager::ptr_t& lmgr){
     }
     auto license = lmgr->getCurrentLicense();
     if(!license){
-        std::cout <<"\nError - No local license to remove.";
-        auto licenseId = LicenseID::fromKey("HAGJ-ET4H-8CJJ-RKBS" );
-        if(licenseId.isEmpty())
-        {
-            std::cout <<"\nError - Invalid License Key supplied.";
-            return false;        
-        }
-        license = lmgr->activateLicense( licenseId );
+        std::cout <<"\nError - No local license found, nothing to remove.";
+        return false;
     }
-
     
     shared_ptr<SampleBase> kbsample = nullptr;
     kbsample.reset(new KeyBasedSample(lmgr));
