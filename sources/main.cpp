@@ -139,6 +139,10 @@ bool DeactivateLicense(const LicenseManager::ptr_t& licenseManager){
             return false;        
         }
         license = licenseManager->activateLicense( licenseId );
+        cout <<"\n Lic filepath = " << licenseManager->licenseFilePath() << std::endl;
+        cout <<"\n Lic file name = " << licenseManager->licenseFileName() << std::endl;
+        cout <<"\n Lic = " << licenseManager->dataLocation() << std::endl;
+
     }
 
     
