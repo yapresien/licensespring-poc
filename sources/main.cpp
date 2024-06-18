@@ -145,12 +145,12 @@ std::string GetEnv( const std::string & var ) {
          return val;
      }
 }
-// Requires: <string>, <stream>, <sstream>
+
 std::string readFile(std::string const& file) 
 {
     std::ifstream is(file);
     if( !is.good() ){
-        throw std::runtime_error("Error: stream has errors.");
+        throw std::runtime_error("Error: tegra stream has errors.");
     }
     std::stringstream ss;
     ss << is.rdbuf();	
@@ -162,10 +162,8 @@ std::string readFile(std::string const& file)
 int main(int argc, char** argv)
 {
     //cout << getCpuId() << std::endl; 
-    auto result = readFile("/sys/module/tegra_fuse/parameters/tegra_chip_uid");
-    cout << "result : " << result;
-    return 0;
-    //cout << machineid::machineHash() << std::endl; 
+    auto tegra_cpu_uid = readFile("/sys/module/tegra_fuse/parameters/tegra_chip_uid");
+
     
 #ifdef _WIN32
     // Enable displaying Unicode symbols in console (custom fields and metadata are UTF-8 encoded)
@@ -229,12 +227,14 @@ int main(int argc, char** argv)
 
             SHA1 checksum;
             auto sfinal = MAC1+TARGETHOSTNAME+CUSTOMER_SSN;
-            std::cout << "Input String: " << sfinal ;
+            // checksum.update(sfinal.c_str());
+            // string hw_sha1 = checksum.final();
 
-            checksum.update(sfinal.c_str());
+            checksum.update(tegra_cpu_uid.c_str());
             string hw_sha1 = checksum.final();
-            cout << "\nPresien HardWareID : " <<  hw_sha1 << std::endl;
             
+            std::cout << "Input String: " << tegra_cpu_uid ;
+            cout << "\nPresien HardWareID : " <<  hw_sha1 << std::endl;          
             pConfiguration->setHardwareID(hw_sha1);
 
         }else if(hwid_opt==3){
@@ -289,7 +289,10 @@ int main(int argc, char** argv)
                 ValidateLicenseOffline(lmgr, deactivateAndRemove);
                 break;
             case ACTION_CENTRE::INSTALL:
-                InstallLicenseOnline(lmgr, deactivateAndRemove);
+                {
+                    ValidateLicenseOffline(lmgr, deactivateAndRemove);
+                    InstallLicenseOnline(lmgr, deactivateAndRemove);
+                }
                 break;
             case ACTION_CENTRE::UPDATE:
                 UpdateLicense(lmgr);
