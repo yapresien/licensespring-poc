@@ -149,7 +149,7 @@ std::string GetEnv( const std::string & var ) {
 int main(int argc, char** argv)
 {
     cout << getCpuId() << std::endl; 
-    cout << machineid::machineHash() << std::endl; 
+    //cout << machineid::machineHash() << std::endl; 
     
 #ifdef _WIN32
     // Enable displaying Unicode symbols in console (custom fields and metadata are UTF-8 encoded)
@@ -217,7 +217,7 @@ int main(int argc, char** argv)
 
             checksum.update(sfinal.c_str());
             string hw_sha1 = checksum.final();
-            cout << "\n Presien HardWareID : " <<  hw_sha1 ;
+            cout << "\nPresien HardWareID : " <<  hw_sha1 << std::endl;
             
             pConfiguration->setHardwareID(hw_sha1);
 
@@ -230,7 +230,6 @@ int main(int argc, char** argv)
         }else{
 
         }
-            
 
         std::cout << "------------- Network info -------------" << std::endl;
         std::cout << "Host name:   " << pConfiguration->getNetworkInfo().hostName() << std::endl;
@@ -288,8 +287,6 @@ int main(int argc, char** argv)
             default:
                 std::cerr << "\n Default action not supported.";
         }
-
-
         std::cout <<"\n\n";
         return 0;
     }
