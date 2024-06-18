@@ -129,12 +129,14 @@ bool DeactivateLicense(const LicenseManager::ptr_t& licenseManager){
         std::cout <<"\n Error - Offline system cannot deactivate license.";
         return false;
     }
-    auto license = m_licenseManager->getCurrentLicense();
+    auto license = licenseManager->getCurrentLicense();
     if(!license){
         std::cout <<"\nError - No license installed.";
         return false;
     }
-    cleanUp( license );
+    shared_ptr<SampleBase> kbsample = nullptr;
+    kbsample.reset(new KeyBasedSample(licenseManager));
+    kbsample->cleanUp( license );
     return true;
 }
 
