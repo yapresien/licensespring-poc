@@ -290,8 +290,10 @@ int main(int argc, char** argv)
                 break;
             case ACTION_CENTRE::INSTALL:
                 {
-                    ValidateLicenseOffline(lmgr, deactivateAndRemove);
-                    InstallLicenseOnline(lmgr, deactivateAndRemove);
+                    if(!ValidateLicenseOffline(lmgr, deactivateAndRemove) )
+                    {
+                        InstallLicenseOnline(lmgr, deactivateAndRemove);
+                    }
                 }
                 break;
             case ACTION_CENTRE::UPDATE:
