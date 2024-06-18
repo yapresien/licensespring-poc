@@ -9,3 +9,7 @@ sudo docker build --progress=plain . -t lsdemo:1.0
 #   -e CUSTOMER_SSN="HEXAGONSSN1234" \
 #   --entrypoint /bin/sh \
 #   -it lsdemo:latest
+
+
+#sudo docker run -v /home/presien/tmp:/PresienLic -it lsdemo:latest
+#sudo docker run --entrypoint /bin/bash -it lsdemo:latest
