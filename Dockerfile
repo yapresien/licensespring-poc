@@ -12,8 +12,6 @@ RUN apt-get update \
        libcpuinfo-dev \
        software-properties-common \
        rsyslog systemd systemd-cron sudo \
-       vim \
-       nano \
     && apt-get clean \
     && rm -Rf /var/lib/apt/lists/* \
     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man

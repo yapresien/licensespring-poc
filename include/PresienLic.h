@@ -25,7 +25,7 @@ using namespace LicenseSpring;
 namespace PRESIEN::BlindSight{
 
     using SpringConfigPtr = LicenseSpring::Configuration::ptr_t;
-    enum class ACTION_CENTRE{
+    enum class REQUEST_CENTRE{
         INVALID_ACTION,
         VALIDATE = 0,
         INSTALL,
@@ -172,12 +172,13 @@ namespace PRESIEN::BlindSight{
     class PresienLicense : public SampleBase{
         
         PresienLicenseConfig mConfig;    
-        ACTION_CENTRE mRequest;
+        REQUEST_CENTRE mRequest;
         const wstring VIRTUAL_BLINDSIGHT_LIC_STORE_PATH =L"/PresienVBS";
 
         private:
             PresienLicense();
-            wstring _getPresienLicStorePath();
+            PresienLicense(REQUEST_CENTRE req);
+            void Initialize();
             bool InstallLicenseOnline();
             bool ValidateLicenseOffline();
             bool UpdateLicense();

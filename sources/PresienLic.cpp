@@ -10,8 +10,16 @@
 //#include "cpu-info.h"
 using namespace PRESIEN::BlindSight;
 
-PresienLicense::PresienLicense() : mRequest(ACTION_CENTRE::VALIDATE)
-{
+PresienLicense::PresienLicense(REQUEST_CENTRE _req):mRequest(_req){
+    Initialize();
+}
+
+PresienLicense::PresienLicense(){
+    mRequest = REQUEST_CENTRE::INVALID_ACTION;
+    Initialize();
+}
+
+void PresienLicense::Initialize(){
     mConfig.Initialize();
     m_licenseManager = LicenseManager::create(mConfig.GetBasePtr());
     assertm(m_licenseManager != nullptr, "Failed to Create lmgr."); // assertion fails
@@ -30,13 +38,12 @@ PresienLicense::PresienLicense() : mRequest(ACTION_CENTRE::VALIDATE)
     ReadProductInfoFromServer();
 
     ReadTargetPlatformVMInfo();
-
 }
 
 void PresienLicense::ParseCmdArgs(int argc, char**argv){
     
     if(argc != 2 ){
-        mRequest = ACTION_CENTRE::INVALID_ACTION;
+        mRequest = REQUEST_CENTRE::INVALID_ACTION;
         return ;//always offline validate
     }
 
@@ -47,46 +54,39 @@ void PresienLicense::ParseCmdArgs(int argc, char**argv){
     std::string install_cmd = "install";
     std::string update_cmd = "update";
     if (cmd == "install") {
-        mRequest = ACTION_CENTRE::INSTALL;
+        mRequest = REQUEST_CENTRE::INSTALL;
     }
     else if( cmd == "update"){
         std::cout << "\n Err - Update license action not supported.\n";
-        mRequest = ACTION_CENTRE::UPDATE;
+        mRequest = REQUEST_CENTRE::UPDATE;
     }
     else if( (cmd == "deactivate")||(cmd == "purge") ){
         std::cout << "\n WARN - deactivation | Purge license action requested.\n";
-        mRequest = ACTION_CENTRE::PURGE;
+        mRequest = REQUEST_CENTRE::PURGE;
     }
     else{
-        mRequest = ACTION_CENTRE::VALIDATE;
+        mRequest = REQUEST_CENTRE::VALIDATE;
     }
 }
 
-wstring PresienLicense::_getPresienLicStorePath( )
-{
-    wstring localdatastorePath = m_licenseManager->dataLocation();
-    wstring newPath = L"/PresienLic" + localdatastorePath;
+void PresienLicense::UpdateDataStorePath() {
+    wstring currPath = m_licenseManager->licenseFilePath();
+    wstring newPath = VIRTUAL_BLINDSIGHT_LIC_STORE_PATH + currPath;
     #ifdef __DEBUG
         wcout << "\n Lic filepath = " << m_licenseManager->licenseFilePath() << std::endl;
         wcout << "Lic file name = " << m_licenseManager->licenseFileName() << std::endl;
         wcout << "localdatastorePath = " << localdatastorePath << std::endl;
         wcout << "Lic newPath = " << newPath<< std::endl;
     #endif
-    return newPath;
-}
-
-void PresienLicense::UpdateDataStorePath() {
-    wstring currPath = m_licenseManager->licenseFilePath();
-    wstring newPath = VIRTUAL_BLINDSIGHT_LIC_STORE_PATH + currPath;
     m_licenseManager->setDataLocation(newPath);
 }
 
 bool PresienLicense::ProcessRequest(){
 
-    if(mRequest == ACTION_CENTRE::INVALID_ACTION){
+    if(mRequest == REQUEST_CENTRE::INVALID_ACTION){
         //AY - if no cmdline args provided, check env variables
         //even no env variable do offline validation.
-        mRequest = ACTION_CENTRE::VALIDATE;
+        mRequest = REQUEST_CENTRE::VALIDATE;
         string req = "VBSINSTALL";
         auto* val = std::getenv(req.c_str());
         if ( val )
@@ -94,12 +94,12 @@ bool PresienLicense::ProcessRequest(){
             string ans = val;
             if(ans == "1")
             {
-                mRequest = ACTION_CENTRE::INSTALL;
+                mRequest = REQUEST_CENTRE::INSTALL;
             }
         }
     }
     
-    if(mRequest == ACTION_CENTRE::INVALID_ACTION)
+    if(mRequest == REQUEST_CENTRE::INVALID_ACTION)
     {
         string req_purge = "VBSPURGE";
         auto* val = std::getenv(req_purge.c_str()); 
@@ -108,17 +108,17 @@ bool PresienLicense::ProcessRequest(){
             string ans = val;
             if(ans == "1")
             {
-                mRequest = ACTION_CENTRE::PURGE;
+                mRequest = REQUEST_CENTRE::PURGE;
             }
             else // if no install and purge then it is validate
-                mRequest = ACTION_CENTRE::VALIDATE;
+                mRequest = REQUEST_CENTRE::VALIDATE;
         }
     }
     switch(mRequest){
-            case ACTION_CENTRE::VALIDATE:
+            case REQUEST_CENTRE::VALIDATE:
                 ValidateLicenseOffline();
                 break;
-            case ACTION_CENTRE::INSTALL:
+            case REQUEST_CENTRE::INSTALL:
                 {
                     if(!ValidateLicenseOffline() )
                     {
@@ -126,23 +126,21 @@ bool PresienLicense::ProcessRequest(){
                     }
                 }
                 break;
-            case ACTION_CENTRE::UPDATE:
+            case REQUEST_CENTRE::UPDATE:
                 UpdateLicense();
                 break;
-            case ACTION_CENTRE::DEACTIVATE:
-            case ACTION_CENTRE::PURGE:
+            case REQUEST_CENTRE::DEACTIVATE:
+            case REQUEST_CENTRE::PURGE:
                 DeactivateLicense();
                 break;
             default:
                 std::cerr << "\n Default action not supported.\n";
                 return false;
         }
-        std::cout <<"\n\n";
         return true;
 }
 
-void PresienLicense::runOnline(bool dr )
-{
+void PresienLicense::runOnline(bool dr ){
     auto license = m_licenseManager->getCurrentLicense();
     if (license)
     {
@@ -168,8 +166,7 @@ void PresienLicense::runOnline(bool dr )
 #endif
 }
 
-void PresienLicense::runOffline(bool dr )
-{
+void PresienLicense::runOffline(bool dr ){
     throw("Not yet implemented.");
 }
 
