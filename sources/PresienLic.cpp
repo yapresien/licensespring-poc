@@ -158,9 +158,8 @@ bool PresienLicense::InstallLicenseOnline(){
 }
 
 bool PresienLicense::ValidateLicenseOffline(){
-    std::cout << "\n Validating offline mode -----------";
-    std::cout << "\nActivating -------------------------";
-    std::cout << "\nActivated  -------------------------\n";
+    std::cout <<std::endl<< "Validating offline mode -----------";
+    std::cout <<std::endl<< "Validated -------------------------\n";
 
     auto license = m_licenseManager->getCurrentLicense();
     if(!license){
