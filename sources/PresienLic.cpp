@@ -94,7 +94,7 @@ bool PresienLicense::ProcessRequest(){
         }
         else
         {
-            val = std::getenv("VBSPURGE");
+            val = std::getenv("VBSPURGE"); 
             if (val && val == (const char *)'1')
             {
                 mRequest = ACTION_CENTRE::PURGE;
