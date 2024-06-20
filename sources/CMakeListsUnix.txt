@@ -12,13 +12,13 @@ pkg_check_modules(CpuInfo REQUIRED IMPORTED_TARGET libcpuinfo)
 add_executable(${PROJECT_NAME}
   KeyBasedSample.cpp
   KeyBasedSample.h
-  UserBasedSample.cpp
-  UserBasedSample.h
   SampleBase.cpp
   SampleBase.h
   main.cpp
   AppConfig.h
   AppConfig.cpp
+  PresienLic.h
+  PresienLic.cpp
 )
 
 # Additional include directories
@@ -75,9 +75,9 @@ endif()
 
 string(TOUPPER ${LIBRARY_LINK_TYPE} LIBRARY_LINK_TYPE)
 if(WIN32 AND USE_SHARED_LIBS)
-add_library(LicenseSpringLib MODULE IMPORTED)
+    add_library(LicenseSpringLib MODULE IMPORTED)
 else()
-add_library(LicenseSpringLib ${LIBRARY_LINK_TYPE} IMPORTED)
+    add_library(LicenseSpringLib ${LIBRARY_LINK_TYPE} IMPORTED)
 endif()
 set_target_properties(LicenseSpringLib
     PROPERTIES IMPORTED_LOCATION
@@ -97,6 +97,7 @@ if (USE_CPP17)
 else()
     target_compile_options(${PROJECT_NAME} PRIVATE -fPIC -std=c++14)
 endif()
+
 target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::CpuInfo LicenseSpringLib ${LS_LINK_LIBS} )
 
 
