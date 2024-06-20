@@ -17,22 +17,15 @@ RUN apt-get update \
     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man
 RUN sed -i 's/^\($ModLoad imklog\)/#\1/' /etc/rsyslog.conf
 
-# WORKDIR /
-# RUN mkdir -p sources
-# WORKDIR /sources
-# RUN cd $WORDKDIR
-
-## dependency cpuinof source
-RUN git clone https://github.com/pytorch/cpuinfo.git
-WORKDIR /cpuinfo
-#RUN pwd
-#RUN ls -ll
-RUN git pull
-RUN mkdir -p ./build
-RUN cd ./build
-RUN cmake /cpuinfo
-RUN cmake --build .
-RUN make install
+## dependency cpuinof source -- uncomment below to include cpuinfo support
+# RUN git clone https://github.com/pytorch/cpuinfo.git
+# WORKDIR /cpuinfo
+# RUN git pull
+# RUN mkdir -p ./build
+# RUN cd ./build
+# RUN cmake /cpuinfo
+# RUN cmake --build .
+# RUN make install
 
 
 WORKDIR /
