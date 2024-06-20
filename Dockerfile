@@ -47,5 +47,5 @@ RUN export PATH=$PATH:$WORKDIR
 # below command will force to RUN everytime 
 # ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
 
-CMD ["/licensespring-poc/sources/release_static/presien-lic-app" , "install" ]
+CMD ["/licensespring-poc/sources/release_static/presien-lic-app" ]
 
