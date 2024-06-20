@@ -8,7 +8,6 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 #pkg_check_modules(CpuInfo REQUIRED IMPORTED_TARGET libcpuinfo)
 
 add_executable(${PROJECT_NAME}
-  KeyBasedSample.cpp
   SampleBase.cpp
   main.cpp
   AppConfig.cpp

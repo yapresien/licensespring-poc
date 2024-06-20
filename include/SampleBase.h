@@ -7,7 +7,7 @@ struct ConfigHelper;
 class SampleBase
 {
 public:
-    SampleBase( LicenseSpring::LicenseManager::ptr_t manager );
+    SampleBase( );
     virtual ~SampleBase() {};
 
     virtual void runOnline( bool deactivateAndRemove = false ) = 0;

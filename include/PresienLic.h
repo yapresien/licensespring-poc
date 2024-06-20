@@ -1,6 +1,9 @@
 
 #include <iostream>
 #include <LicenseSpring/Exceptions.h>
+
+#include "SampleBase.h"
+
 #include <iostream>
 #include <thread>
 
@@ -13,7 +16,6 @@
 #include <cctype>
 #include <string>
 
-#include "KeyBasedSample.h"
 #include "AppConfig.h"
 #include "Sha1.hpp"
 
@@ -63,12 +65,14 @@ namespace PRESIEN::BlindSight{
             }
         }
 
+        string mTegraCpuUid;
+
         bool _updateToPresienHardwareID()
         {
-            string tegra_cpu_uid;
+            
             try
             {
-                tegra_cpu_uid = _readFile("/sys/module/tegra_fuse/parameters/tegra_chip_uid");
+                mTegraCpuUid = _readFile("/sys/module/tegra_fuse/parameters/tegra_chip_uid");
             }
             catch (...)
             {
@@ -81,10 +85,10 @@ namespace PRESIEN::BlindSight{
             }
             SHA1 checksum;
             // generate own hwid algorithm
-            checksum.update(tegra_cpu_uid.c_str());
+            checksum.update(mTegraCpuUid.c_str());
             string hw_sha1 = checksum.final();
 
-            std::cout << "Input String: " << tegra_cpu_uid << std::endl;
+            std::cout << "Input String: " << mTegraCpuUid << std::endl;
             cout << "Presien HardWareID : " << hw_sha1 << std::endl;
             _pConfig->setHardwareID(hw_sha1);
 
@@ -158,15 +162,15 @@ namespace PRESIEN::BlindSight{
             _updateToPresienHardwareID();
         }
 
+        const std::string& GetTegraCpuUid()const { return mTegraCpuUid;}
         SpringConfigPtr GetBasePtr() const
         {
             return _pConfig;
         }
     };
 
-    class PresienLicense{
+    class PresienLicense : public SampleBase{
         
-        LicenseManager::ptr_t mLicenseManager;
         PresienLicenseConfig mConfig;    
         ACTION_CENTRE mRequest;
         const wstring VIRTUAL_BLINDSIGHT_LIC_STORE_PATH =L"/PresienVBS";
@@ -189,5 +193,9 @@ namespace PRESIEN::BlindSight{
             }
             void ParseCmdArgs(int argc, char**argv);
             bool ProcessRequest();
+            
+            virtual void runOnline( bool deactivateAndRemove = false ) override;
+            virtual void runOffline( bool deactivateAndRemove = false ) override;
+
     };
 };

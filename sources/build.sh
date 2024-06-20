@@ -59,5 +59,5 @@ if expr "${BUILD_COMPILER}" : ".*mingw.*"; then
     [ ! -z "${CMAKE_PATH}" ] && [ -x "${CMAKE_PATH}" ] && cmake_cmd="${CMAKE_PATH}"
 fi
 
-$cmake_cmd -G "${CMAKE_GEN}" -DCMAKE_BUILD_TYPE=${BUILD_TYPE_FLAG} -DUSE_SHARED_LIBS=${SHARED_FLAG} -DCMAKE_CODEBLOCKS_MAKE_ARGUMENTS=-j${cproc} -DCMAKE_COLOR_MAKEFILE=ON ..
+$cmake_cmd -G "${CMAKE_GEN}" -DCMAKE_BUILD_TYPE=${BUILD_TYPE_FLAG} -DUSE_SHARED_LIBS=${SHARED_FLAG} -DCMAKE_COLOR_MAKEFILE=ON ..
 $cmake_cmd --build . --target all

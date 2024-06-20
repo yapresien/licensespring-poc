@@ -10,13 +10,11 @@
 //#include "cpu-info.h"
 using namespace PRESIEN::BlindSight;
 
-PresienLicense::PresienLicense() : mRequest(ACTION_CENTRE::VALIDATE),
-                                   mLicenseManager(nullptr)
+PresienLicense::PresienLicense() : mRequest(ACTION_CENTRE::VALIDATE)
 {
     mConfig.Initialize();
-    mLicenseManager = LicenseManager::create(mConfig.GetBasePtr());
-
-    assertm(mLicenseManager != nullptr, "Failed to Create lmgr."); // assertion fails
+    m_licenseManager = LicenseManager::create(mConfig.GetBasePtr());
+    assertm(m_licenseManager != nullptr, "Failed to Create lmgr."); // assertion fails
 
     std::cout << "------------- General info -------------" << std::endl;
     std::cout << mConfig.getAppName() + ' ' << mConfig.getAppVersion() << std::endl;
@@ -33,40 +31,6 @@ PresienLicense::PresienLicense() : mRequest(ACTION_CENTRE::VALIDATE),
 
     ReadTargetPlatformVMInfo();
 
-}
-
-void PresienLicense::UpdateDataStorePath() {
-    wstring currPath = mLicenseManager->licenseFilePath();
-    wstring newPath = VIRTUAL_BLINDSIGHT_LIC_STORE_PATH + currPath;
-    mLicenseManager->setDataLocation(newPath);
-}
-
-bool PresienLicense::ProcessRequest(){
-    switch(mRequest){
-            case ACTION_CENTRE::VALIDATE:
-                ValidateLicenseOffline();
-                break;
-            case ACTION_CENTRE::INSTALL:
-                {
-                    if(!ValidateLicenseOffline() )
-                    {
-                        InstallLicenseOnline();
-                    }
-                }
-                break;
-            case ACTION_CENTRE::UPDATE:
-                UpdateLicense();
-                break;
-            case ACTION_CENTRE::DEACTIVATE:
-            case ACTION_CENTRE::PURGE:
-                DeactivateLicense();
-                break;
-            default:
-                std::cerr << "\n Default action not supported.\n";
-                return false;
-        }
-        std::cout <<"\n\n";
-        return true;
 }
 
 void PresienLicense::ParseCmdArgs(int argc, char**argv){
@@ -98,20 +62,83 @@ void PresienLicense::ParseCmdArgs(int argc, char**argv){
     }
 }
 
-
-
-
 wstring PresienLicense::_getPresienLicStorePath( )
 {
-    wstring localdatastorePath = mLicenseManager->dataLocation();
+    wstring localdatastorePath = m_licenseManager->dataLocation();
     wstring newPath = L"/PresienLic" + localdatastorePath;
     #ifdef __DEBUG
-        wcout << "\n Lic filepath = " << mLicenseManager->licenseFilePath() << std::endl;
-        wcout << "Lic file name = " << mLicenseManager->licenseFileName() << std::endl;
+        wcout << "\n Lic filepath = " << m_licenseManager->licenseFilePath() << std::endl;
+        wcout << "Lic file name = " << m_licenseManager->licenseFileName() << std::endl;
         wcout << "localdatastorePath = " << localdatastorePath << std::endl;
         wcout << "Lic newPath = " << newPath<< std::endl;
     #endif
     return newPath;
+}
+
+void PresienLicense::UpdateDataStorePath() {
+    wstring currPath = m_licenseManager->licenseFilePath();
+    wstring newPath = VIRTUAL_BLINDSIGHT_LIC_STORE_PATH + currPath;
+    m_licenseManager->setDataLocation(newPath);
+}
+
+bool PresienLicense::ProcessRequest(){
+    switch(mRequest){
+            case ACTION_CENTRE::VALIDATE:
+                ValidateLicenseOffline();
+                break;
+            case ACTION_CENTRE::INSTALL:
+                {
+                    if(!ValidateLicenseOffline() )
+                    {
+                        InstallLicenseOnline();
+                    }
+                }
+                break;
+            case ACTION_CENTRE::UPDATE:
+                UpdateLicense();
+                break;
+            case ACTION_CENTRE::DEACTIVATE:
+            case ACTION_CENTRE::PURGE:
+                DeactivateLicense();
+                break;
+            default:
+                std::cerr << "\n Default action not supported.\n";
+                return false;
+        }
+        std::cout <<"\n\n";
+        return true;
+}
+
+void PresienLicense::runOnline(bool dr )
+{
+    auto license = m_licenseManager->getCurrentLicense();
+    if (license)
+    {
+        std::cout << "\nError - License is already installed.";
+        // return;
+    }
+
+    auto licenseId = LicenseID::fromKey("HAGJ-ET4H-8CJJ-RKBS");
+    if (licenseId.isEmpty())
+    {
+        std::cout << "\nError - Invalid License Key supplied.";
+        return;
+    }
+
+    license = m_licenseManager->activateLicense(licenseId);
+    license->addDeviceVariable( "TegraCpuUid", mConfig.GetTegraCpuUid() );
+    std::cout << "SUCCESS - License activated successfully.." << std::endl;
+    // AY - required to send device variables
+    updateAndCheckLicense(license);
+#ifdef __DEBUG
+    PrintLicense(license);
+    printUpdateInfo();
+#endif
+}
+
+void PresienLicense::runOffline(bool dr )
+{
+    throw("Not yet implemented.");
 }
 
 bool PresienLicense::InstallLicenseOnline(){
@@ -119,60 +146,58 @@ bool PresienLicense::InstallLicenseOnline(){
     std::cout << "\nActivating ------------------------";
     std::cout << "\nActivated Install mode ------------\n";
     
-    shared_ptr<SampleBase> kbsample = nullptr;
-    kbsample.reset(new KeyBasedSample(mLicenseManager));
-    if( !mLicenseManager->isOnline() )
+    if( !m_licenseManager->isOnline() )
     {
         std::cout <<"\n Error - Offline system cannot install license.";
         return false;
     }
     std::cout <<"\n System is online -----";
-    kbsample->runOnline();
+    
+    runOnline();
     return true;
 }
+
 bool PresienLicense::ValidateLicenseOffline(){
     std::cout << "\n Validating offline mode -----------";
     std::cout << "\nActivating -------------------------";
     std::cout << "\nActivated  -------------------------\n";
 
-    auto license = mLicenseManager->getCurrentLicense();
+    auto license = m_licenseManager->getCurrentLicense();
     if(!license){
         std::cerr <<"\n Error - failed to get local license. License not installed.\n";
         return false;
     }
 
-    shared_ptr<SampleBase> kbsample = nullptr;
-    kbsample.reset(new KeyBasedSample(mLicenseManager));
     //Throw exception if failed local check
-    kbsample->checkLicenseLocal( license ); 
+    checkLicenseLocal( license ); 
     return true;
 }
+
 bool PresienLicense::UpdateLicense(){
     std::cout << "\n UpdateLicense -- to be implemented.";
     return false;
 }
+
 bool PresienLicense::DeactivateLicense(){
     std::cout << "\n DeactivateLicense and removing from local store -- Online only.";
-    if( !mLicenseManager->isOnline() )
+    if( !m_licenseManager->isOnline() )
     {
         std::cout <<"\n Error - Offline system cannot deactivate license.";
         return false;
     }
-    auto license = mLicenseManager->getCurrentLicense();
+    auto license = m_licenseManager->getCurrentLicense();
     if(!license){
         std::cout <<"\nError - No local license found, nothing to remove.";
         return false;
     }
     
-    shared_ptr<SampleBase> kbsample = nullptr;
-    kbsample.reset(new KeyBasedSample(mLicenseManager));
-    kbsample->updateAndCheckLicense( license );
-    kbsample->cleanUp( license );
+    updateAndCheckLicense( license );
+    cleanUp( license );
     return true;
 }
 
 bool PresienLicense::ReadProductInfoFromServer(){
-    auto productInfo = mLicenseManager->getProductDetails(true);
+    auto productInfo = m_licenseManager->getProductDetails(true);
     if (AuthMethodKeyBased != productInfo.authorizationMethod())
     {
         throw("\n Exception - Only KeyBased authentication supported.");

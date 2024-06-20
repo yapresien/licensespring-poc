@@ -9,8 +9,8 @@ std::string TmToStr( const tm& dateTime )
     return TmToString( dateTime, "%d-%m-%Y %H:%M:%S" );
 };
 
-SampleBase::SampleBase( LicenseManager::ptr_t manager )
-    : m_licenseManager( manager )
+SampleBase::SampleBase( )
+    : m_licenseManager( nullptr )
 {
 }
 
