@@ -149,10 +149,11 @@ bool PresienLicense::InstallLicenseOnline(){
     if( !m_licenseManager->isOnline() )
     {
         std::cout <<"\n Error - Offline system cannot install license.";
+        ValidateLicenseOffline();
         return false;
     }
+
     std::cout <<"\n System is online -----";
-    
     runOnline();
     return true;
 }
