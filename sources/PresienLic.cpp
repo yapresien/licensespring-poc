@@ -4,6 +4,7 @@
 // #define NDEBUG
 #include <cassert>
  
+ #include <json/json.hpp>
 // Use (void) to silence unused warnings.
 #define assertm(exp, msg) assert(((void)msg, exp))
 
@@ -148,7 +149,10 @@ void PresienLicense::runOnline(bool dr ){
         // return;
     }
 
-    auto licenseId = LicenseID::fromKey("HAGJ-ET4H-8CJJ-RKBS");
+    using json = nlohmann::json;
+    std::ifstream f("PresienLic.config.json");
+    json data = json::parse(f);
+    auto licenseId = LicenseID::fromKey(data["LicKeyValue"]);
     if (licenseId.isEmpty())
     {
         std::cout << "\nError - Invalid License Key supplied.";
