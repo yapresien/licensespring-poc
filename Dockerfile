@@ -46,6 +46,6 @@ WORKDIR /licensespring-poc/sources/release_static
 RUN export PATH=$PATH:$WORKDIR
 # below command will force to RUN everytime 
 # ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
-
+RUN cp /licensespring-poc/sources/PresienLic.config.json /licensespring-poc/sources/release_static/
 CMD ["/licensespring-poc/sources/release_static/presien-lic-app" ]
 
