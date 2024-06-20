@@ -87,21 +87,33 @@ bool PresienLicense::ProcessRequest(){
         //AY - if no cmdline args provided, check env variables
         //even no env variable do offline validation.
         mRequest = ACTION_CENTRE::VALIDATE;
-        const char *val = std::getenv("VBSINSTALL");
-        if (val && val == (const char *)'1')
+        string req = "VBSINSTALL";
+        auto* val = std::getenv(req.c_str());
+        if ( val )
         {
-            mRequest = ACTION_CENTRE::INSTALL;
-        }
-        else
-        {
-            val = std::getenv("VBSPURGE"); 
-            if (val && val == (const char *)'1')
+            string ans = val;
+            if(ans == "1")
             {
-                mRequest = ACTION_CENTRE::PURGE;
+                mRequest = ACTION_CENTRE::INSTALL;
             }
         }
     }
-
+    
+    if(mRequest == ACTION_CENTRE::INVALID_ACTION)
+    {
+        string req_purge = "VBSPURGE";
+        auto* val = std::getenv(req_purge.c_str()); 
+        if (val)
+        {
+            string ans = val;
+            if(ans == "1")
+            {
+                mRequest = ACTION_CENTRE::PURGE;
+            }
+            else // if no install and purge then it is validate
+                mRequest = ACTION_CENTRE::VALIDATE;
+        }
+    }
     switch(mRequest){
             case ACTION_CENTRE::VALIDATE:
                 ValidateLicenseOffline();
